@@ -478,8 +478,8 @@ class HistoryUpdate(object):
             matches = type(self)._scraper.scrape(
                 "%s%s" % (self.__options["etf_family_prefix_URL"], symbol))
             f, c = matches[0], matches[1]
-            f = "UNKNOWN" if not f else f
-            c = "UNKNOWN" if not c or c == "--" else c
+            f = "UNKNOWN" if not f or not f.strip() else f
+            c = "UNKNOWN" if not c or not c.strip() or c == "--" else c
             # To ensure later aggregations include all member securities map
             # the collected category to a standardized set in the configuration
             # file
