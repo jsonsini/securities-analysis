@@ -997,6 +997,7 @@
         "NNVC 1.0 20.0 2019.731507",
         "NOG 1.0 10.0 2020.724044",
         "NRBO 1.0 25.0 2020.0",
+        "NRGU 1.0 20.0 2020.781421",
         "NTES 5.0 1.0 2020.754098",
         "NTG 1.0 10.0 2020.333333",
         "NUGT 1.0 5.0 2020.311475",
@@ -1052,11 +1053,14 @@
         "RTTR 1.0 25.0 2020.398907",
         "RTTR 1.0 25.0 2020.401639",
         "RTX 339.0 200.0 2020.256831",
+        "RUSHA 3.0 2.0 2020.784153",
+        "RUSHB 3.0 2.0 2020.784153",
         "RYCE 1.0 20.0 2019.969863",
         "SALT 1.0 10.0 2020.26776",
         "SCC 1.0 2.0 2020.631148",
         "SCON 1.0 10.0 2020.693989",
         "SCYX 1.0 10.0 2020.543716",
+        "SEII 1.0 50.0 2020.784153",
         "SFET 1.0 20.0 2019.805479",
         "SFUN 1.0 10.0 2020.467213",
         "SGBX 1.0 20.0 2020.101093",
@@ -1860,8 +1864,8 @@
         "http://eoddata.com/stocklist/USMF/%s.htm": "fund"
     },
     "eod_pool_size": 10,
-    "etf_category_pattern": "Category Name[^\\\"]*[^>]*>([^<]*)",
-    "etf_family_pattern": "Fund Owner Firm Name[^\\\"]*[^>]*>([^<]*)",
+    "etf_category_pattern": "Category Name</td>\\s+<td>([^<]+)",
+    "etf_family_pattern": "Fund Owner Firm Name</td>\\s+<td>([^<]+)",
     "etf_family_prefix_URL": "https://ycharts.com/companies/",
     "fit_columns": [
         "1YA-1MF",
@@ -2374,7 +2378,7 @@
     "split_URL": "http://eoddata.com/splits.aspx",
     "split_pattern": "(?<=stockquote\\/)[^>]*>([^<]*).*\n<td>([^<]*).*\n<td>([^-]*)-([^<]*)",
     "stock_assets_pattern": "(?<=Market cap<\\/td><td class=\\\"wsod_quoteDataPoint\\\">\\$)[^<]*",
-    "stock_category_pattern": "Sector<[^\"]*\"data_data\">([^<]*) <.*Industry<[^\"]*\"data_data\">([^<]*) ",
+    "stock_category_pattern": "Sector</span><br/><span [^>]+>([^<]+).*?Industry</span><br/><span [^>]+>([^<]+)",
     "stock_category_prefix_URL": "https://quotes.wsj.com/",
     "timeout_period": 30
 }
