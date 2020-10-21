@@ -1025,6 +1025,7 @@
         "OILK 1.0 5.0 2020.306011",
         "ONVO 1.0 20.0 2020.63388",
         "OPCH 1.0 4.0 2020.092896",
+        "OPT 5.0 8.0 2020.789617",
         "OVV 1.0 5.0 2020.07377",
         "PAK 1.0 4.0 2020.325137",
         "PASS 1.0 10.0 2020.65847",
@@ -1164,6 +1165,7 @@
     ],
     "category_mapping": {
         "-": "UNKNOWN",
+        "--": "UNKNOWN",
         "Absolute Return": "Multi Capital Growth",
         "Accounting": "Financial Services",
         "Advertising/Marketing/Public Relations": "Consumer Services",
@@ -2387,7 +2389,7 @@
     "split_URL": "http://eoddata.com/splits.aspx",
     "split_pattern": "(?<=stockquote\\/)[^>]*>([^<]*).*\n<td>([^<]*).*\n<td>([^-]*)-([^<]*)",
     "stock_assets_pattern": "(?<=Market cap<\\/td><td class=\\\"wsod_quoteDataPoint\\\">\\$)[^<]*",
-    "stock_category_pattern": "Sector</span><br/><span [^>]+>([^<]+).*?Industry</span><br/><span [^>]+>([^<]+)",
-    "stock_category_prefix_URL": "https://quotes.wsj.com/",
+    "stock_category_pattern": "Industry</div><div class=\"wsod_fRight wsod_bold\">([^<]+)()",
+    "stock_category_prefix_URL": "https://money.cnn.com/quote/quote.html?symb=",
     "timeout_period": 30
 }
