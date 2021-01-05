@@ -2,7 +2,7 @@
 """Securities Analysis: Configurable Regression Analysis of Securities
 
 Securities Analysis is an open source package for performing non linear
-regression analysis on lists of mutual funds, exchange traded funds, and 
+regression analysis on lists of mutual funds, exchange traded funds, and
 stocks. The analysis is based on daily closing prices and is designed to be
 executed after market close via a cron job or equivalent scheduler.  All
 configuration parameters are specified in the options.json file located in the
@@ -78,7 +78,7 @@ result = setuptools.setup(
 )
 
 # Determining the path of the installation directory for the options file.
-optionsPath = os.path.join(site.getsitepackages()[1],
+optionsPath = os.path.join(site.getsitepackages()[0],
                            result.dist_files[0][2][5:], "securitiesanalysis",
                            "data", "options.json")
 # Allow all users write access to options file so that package can be executed
