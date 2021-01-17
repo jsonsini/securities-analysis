@@ -114,7 +114,7 @@ class SecuritiesAnalysis(object):
         # Converts strings to corresponding classes for results dataframe
         self.__collect_types = {
             k: pydoc.locate(v) for k,
-            v in self.__options["collect_types"].items()}
+                                   v in self.__options["collect_types"].items()}
         """dictionary: Types for each column of dataframe."""
         self.__define_ranges__()
         pandas.set_option("display.float_format", lambda x: "%.6f" % x)
@@ -262,10 +262,10 @@ class SecuritiesAnalysis(object):
             # Find the dataframe indices closest to the range boundaries
             closest_indices = [(history.index.get_loc(
                 self.__ranges["start"][i], method="nearest"),
-                history.index.get_loc(self.__ranges["end"][i],
-                                      method="nearest"))
-                if fill_period[i] else numpy.nan for i in
-                range(len(fill_period))]
+                                history.index.get_loc(self.__ranges["end"][i],
+                                                      method="nearest"))
+                               if fill_period[i] else numpy.nan for i in
+                               range(len(fill_period))]
             closest_dates = [(history.index[c[0]],
                               history.index[c[1]]) if c is not numpy.nan
                              else numpy.nan for c in closest_indices]
@@ -280,9 +280,9 @@ class SecuritiesAnalysis(object):
             # Generate the fits of the same periods and collect the growth rate
             fit = [["%.6f"
                     % v for v in self.get_fit(
-                        history[self.__ranges["start"]
-                                [i]:self.__ranges["end"][i]],
-                        symbol, self.__ranges.index[i])] if fill_period[i]
+                history[self.__ranges["start"]
+                        [i]:self.__ranges["end"][i]],
+                symbol, self.__ranges.index[i])] if fill_period[i]
                    else 3 * [numpy.nan] for i in range(len(fill_period))]
             self.__log.log("processed history for %s %s %s %s"
                            % (symbol, str(actual), str(fit), p))
@@ -314,16 +314,16 @@ class SecuritiesAnalysis(object):
         rmse = [[i[2] for i in af[1]] for af in actual_fit]
         # Extract the list for each period and value for the dataframe
         self.__data["3YA"], self.__data["3YDA"], self.__data["2YA"], \
-            self.__data["2YDA"], self.__data["1YA"] = \
+        self.__data["2YDA"], self.__data["1YA"] = \
             tuple([[a[i] for a in actual] for i in range(5)])
         self.__data["3YF"], self.__data["3YDF"], self.__data["2YF"], \
-            self.__data["2YDF"], self.__data["1YF"] = \
+        self.__data["2YDF"], self.__data["1YF"] = \
             tuple([[f[i] for f in fit] for i in range(5)])
         self.__data["3YR2"], self.__data["3YDR2"], self.__data["2YR2"], \
-            self.__data["2YDR2"], self.__data["1YR2"] = \
+        self.__data["2YDR2"], self.__data["1YR2"] = \
             tuple([[r[i] for r in r2] for i in range(5)])
         self.__data["3YRMSE"], self.__data["3YDRMSE"], self.__data["2YRMSE"], \
-            self.__data["2YDRMSE"], self.__data["1YRMSE"] = \
+        self.__data["2YDRMSE"], self.__data["1YRMSE"] = \
             tuple([[r[i] for r in rmse] for i in range(5)])
         self.__log.log("got regression coefficients %s" % p)
 
@@ -348,9 +348,9 @@ class SecuritiesAnalysis(object):
         report_paths = [
             (os.path.join(self.__report_path, "data", r),
              securitiesanalysis.utilities.get_yearfrac(
-                datetime.datetime.strptime(r[:-4],
-                                           "%Y-%m-%d").date()
-            )) for r in os.listdir(os.path.join(self.__report_path, "data"))]
+                 datetime.datetime.strptime(r[:-4],
+                                            "%Y-%m-%d").date()
+             )) for r in os.listdir(os.path.join(self.__report_path, "data"))]
         # Filter the list to just over the prior year's worth of reports
         reports = [(pandas.read_csv(r[0], sep="|", header=0,
                                     names=self.__options["column_order"],
@@ -426,7 +426,7 @@ class SecuritiesAnalysis(object):
             "grouping reports for %s %s" % (str(self.__log_date), p))
         # Create list of dataframes based on ticker symbol
         grouped_reports = [group for _,
-                           group in reports.groupby(reports.index)]
+                                     group in reports.groupby(reports.index)]
         # Move the date column to the index for each dataframe
         for i in range(len(grouped_reports)):
             symbol = grouped_reports[i].index[0]
@@ -507,8 +507,8 @@ class SecuritiesAnalysis(object):
             Linear regression fit coefficients for summary durations.
 
         """
+        p = multiprocessing.current_process().name
         try:
-            p = multiprocessing.current_process().name
             symbol, frame = report
             self.__log.log("process summary for %s %s" % (symbol, p))
             c = self.__options["process_summary_columns"]
@@ -537,7 +537,8 @@ class SecuritiesAnalysis(object):
                 s: ["%.6f"
                     % (1 + (frame.loc[d[1]][s] / frame.loc[d[0]][s] - 1)
                        / (d[1] - d[0])) if d is not numpy.nan and
-                    not frame.loc[d[0]][s] == 0 else numpy.nan
+                                           not frame.loc[d[0]][
+                                                   s] == 0 else numpy.nan
                     for d in closest_dates] for s in c}
             # Generate the fits of the same periods and collect the linear rate
             fit = {
@@ -625,7 +626,7 @@ class SecuritiesAnalysis(object):
         # Find the top ten one year returns for each security type and cap
         top_sorted = self.__data.sort_values(
             ["type", "cap", "1YA"], ascending=[True, False, False]).groupby(
-                ["type", "cap"], as_index=False).head(10)
+            ["type", "cap"], as_index=False).head(10)
         top_sorted.index.name = "symbol"
         a = self.__options["aggregate_dict"]
         # Generate counts, means, and standard deviations for the whole market
@@ -651,7 +652,7 @@ class SecuritiesAnalysis(object):
         Groups records in dataframe and generates summary statistics for each.
 
         Selects regression fits for securities with the fastest increasing non
-        linear regression coefficients by type and calculates the 
+        linear regression coefficients by type and calculates the
         corresponding aggregate regression fit summary statistics for each
         category.
 
@@ -693,7 +694,7 @@ class SecuritiesAnalysis(object):
 
         Parameters
         ----------
-        top_sorted_by_type_data : obj
+        top_sorted : obj
             Regression fits for top one year returns by security type and cap.
         market : obj
             Aggregate regression fits for entire market.
@@ -743,7 +744,7 @@ class SecuritiesAnalysis(object):
         email_address = self.__options["email_address"]
         summary_message = email.mime.multipart.MIMEMultipart()
         summary_message["Subject"] = "market summary for %s" \
-            % str(self.__log_date)
+                                     % str(self.__log_date)
         summary_message["From"] = email_address
         summary_message["To"] = email_address
         # Attach the summary workbook to the message
@@ -752,8 +753,8 @@ class SecuritiesAnalysis(object):
                 "%s.xlsx" % str(self.__log_date)), "rb") as summary_file:
             attachment = email.mime.application.MIMEApplication(
                 summary_file.read(), Name="%s.xlsx" % str(self.__log_date))
-        attachment["Content-Disposition"] = "attachment; filename=\"%s.xlsx\"" \
-            % str(self.__log_date)
+        attachment["Content-Disposition"] = \
+            "attachment; filename=\"%s.xlsx\"" % str(self.__log_date)
         summary_message.attach(
             email.mime.text.MIMEText("\n".join(self.__message_list)))
         summary_message.attach(attachment)
@@ -824,7 +825,7 @@ class SecuritiesAnalysis(object):
         p = multiprocessing.current_process().name
         self.__log.log("removing logs %s" % p)
         keep_date = self.__log_date \
-            - datetime.timedelta(days=self.__options["log_keep_days"])
+                    - datetime.timedelta(days=self.__options["log_keep_days"])
         log_files = [os.path.join(self.__log_path, l)
                      for l in os.listdir(self.__log_path)]
         # Extract the file dates from the names
@@ -835,8 +836,8 @@ class SecuritiesAnalysis(object):
         # Find the dates outside of the retention period
         keep = [k for k in log_dates.keys() if keep_date < k]
         # Delete the log files outside of the retention period
-        [os.remove(v) for k, v in log_dates.items() if not k in keep]
-        removed_files = [v for k, v in log_dates.items() if not k in keep]
+        [os.remove(v) for k, v in log_dates.items() if k not in keep]
+        removed_files = [v for k, v in log_dates.items() if k not in keep]
         error_files = [os.path.join(self.__error_path, l)
                        for l in os.listdir(self.__error_path)]
         error_dates = {
@@ -844,9 +845,9 @@ class SecuritiesAnalysis(object):
                 l.split("/")[-1][:-4],
                 "%Y-%m-%d").date(): l for l in error_files}
         # Delete the error files outside of the retention period
-        [os.remove(v) for k, v in error_dates.items() if not k in keep]
+        [os.remove(v) for k, v in error_dates.items() if k not in keep]
         removed_files.extend(
-            [v for k, v in error_dates.items() if not k in keep])
+            [v for k, v in error_dates.items() if k not in keep])
         self.__log.log("deleted %s based on %s day threshold"
                        % (str(removed_files), self.__options["log_keep_days"]))
         self.__log.log("removed logs %s" % p)

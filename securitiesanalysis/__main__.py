@@ -2,7 +2,7 @@
 """Securities Analysis: Configurable Regression Analysis of Securities
 
 Securities Analysis is an open source package for performing non linear
-regression analysis on lists of mutual funds, exchange traded funds, and 
+regression analysis on lists of mutual funds, exchange traded funds, and
 stocks. The analysis is based on daily closing prices and is designed to be
 executed after market close via a cron job or equivalent scheduler.  All
 configuration parameters are specified in the options.json file located in the
@@ -66,7 +66,7 @@ def is_trading_day(d, holidays):
 
     Parameters
     ----------
-    d : datetime
+    d : date
         Date checked for trading day status.
     holidays : list
         List of known banking holidays from year 2000 to 2050.
@@ -92,7 +92,7 @@ def main():
     """
     Executes history update and analysis modules.
 
-    Load the options file, update the closing prices for all securities, 
+    Load the options file, update the closing prices for all securities,
     perform the regression analysis, and save the results.
 
     """

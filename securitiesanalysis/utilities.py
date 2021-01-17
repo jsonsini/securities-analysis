@@ -7,8 +7,10 @@ mapping of traditional market capitalization categories, fit function for
 nonlinear regression analysis, and adding a worksheet to an existing
 workbook along with a basic logging class.
 
-The Logger class is a simple means of prepending a formatted timestamp to
-messages before appending them to a configured path.
+The nondemonic classes are simple wrappers to create the ability to instantiate
+nested concurrent pools of processes.  The Logger class is a simple means of
+prepending a formatted timestamp to messages before appending them to a
+configured path.
 
 Notes
 -----
@@ -27,6 +29,7 @@ under the AGPLv3.
 """
 import calendar
 import datetime
+import multiprocessing.pool
 
 
 def format_error(error):
@@ -70,7 +73,7 @@ def get_yearfrac(d):
 
     """
     return d.year + (d.timetuple().tm_yday + 0.0) \
-        / (366 if calendar.isleap(d.year) else 365)
+           / (366 if calendar.isleap(d.year) else 365)
 
 
 def get_cap(assets):
@@ -163,6 +166,58 @@ def add_sheet(workbook, name, frame):
         row += 1
 
 
+class NonDaemonicProcess(multiprocessing.Process):
+    """
+    Process class limited to non daemonic state.
+
+    Extension of multiprocessing.Process with the daemon property modified to
+    return false in all cases.
+
+    """
+
+    @property
+    def daemon(self):
+        """boolean: Explicitly restrict processes to be nondaemonic."""
+        return False
+
+    @daemon.setter
+    def daemon(self, value):
+        pass
+
+
+class NonDaemonicContext(type(multiprocessing.get_context())):
+    """
+    Minimal context wrapping nondaemonic processes.
+
+    Multiprocessing context that uses the NonDaemonicProcess class to create a
+    pool containing only nondaemonic processes.
+
+    """
+
+    Process = NonDaemonicProcess
+    """obj: Processes for pool limited to nondaemonic state."""
+
+
+class NonDaemonicPool(multiprocessing.pool.Pool):
+    """
+    Minimal pool wrapping nondaemonic processes.
+
+    Extension of multiprocessing.pool.Pool that uses the NonDaemonContext
+    class to create a nestable pool containing only nondaemonic processes.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Prepares all needed instance variables for execution.
+
+        Adds the nondemonic context to allow for nesting of pools.
+
+        """
+        kwargs["context"] = NonDaemonicContext()
+        super(NonDaemonicPool, self).__init__(*args, **kwargs)
+
+
 class Logger(object):
     """
     Simple logging utility with customizable time stamp format.
@@ -176,7 +231,7 @@ class Logger(object):
         """
         Prepares all needed instance variables for execution.
 
-        Sets up the logging path ad time stamp format.
+        Sets up the logging path and time stamp format.
 
         Parameters
         ----------
