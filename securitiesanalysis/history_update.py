@@ -9,7 +9,7 @@ for any new splits found.
 
 The HistoryUpdate class is the main class for processing daily updates with the
 exception of two functions, get_metadata and scrape_EOD, that due to pickling
-limitations of the concurrent module are not implemented as instance methods. 
+limitations of the concurrent module are not implemented as instance methods.
 
 Notes
 -----
@@ -36,168 +36,8 @@ import sys
 
 import pandas
 
-import securitiesanalysis.concurrent
 import securitiesanalysis.regex_webscraper
 import securitiesanalysis.utilities
-
-
-def get_metadata(history_update, symbol_tuple):
-    """
-    Retrieves daily closing price and metadata for each security.
-
-    Based on ticker symbol and security type, this function collects the
-    net assets or market capitalization, cap, category, and family.
-
-    Parameters
-    ----------
-    history_update : class
-        Instance containing access to log and error files along with regular
-        expression parsing object.
-    symbol_tuple : tuple
-        Tuple containing strings for ticket symbol and security type.
-
-    Returns
-    -------
-    assets : float
-        Net assets for mutual funds and exchange traded funds, market
-        capitalization for stocks.
-    cap : str
-        "large", "mid", or "small" defined by greater than $10B, between $2B
-        and $10B, and less than $2B.
-    category : str
-        Sector or grouping ticker symbol belongs to.
-    family : str
-        Only for mutual funds and exchange traded funds, the investment firm
-        managing the fund.
-
-    """
-    p = multiprocessing.current_process().name
-    symbol, security_type = symbol_tuple
-    history_update.log.log(
-        "get metadata for %s %s %s" % (symbol, security_type, p))
-    # Provide default values in case security metadata fields are not available
-    assets, cap, category, family = -1, "UNKNOWN", "UNKNOWN", "UNKNOWN"
-    # Based on security type collect the appropriate metadata
-    if security_type == "fund":
-        # Update the regular expression patterns and attributes to collect
-        history_update._scraper.pattern_list = [
-            history_update.options["fund_assets_pattern"],
-            history_update.options["fund_category_pattern"]]
-        history_update._scraper.findall = False
-        assets, category = history_update.get_fund_total_assets_category(
-            symbol)
-        cap = securitiesanalysis.utilities.get_cap(assets)
-        history_update._scraper.pattern_list = [
-            history_update.options["fund_family_pattern"]]
-        family = history_update.get_fund_family(symbol)
-    elif security_type == "etf":
-        # Update the regular expression patterns and attributes to collect
-        history_update._scraper.pattern_list = [
-            history_update.options["fund_assets_pattern"]]
-        history_update._scraper.findall = False
-        assets = history_update.get_etf_total_assets(symbol)
-        cap = securitiesanalysis.utilities.get_cap(assets)
-        history_update._scraper.pattern_list = [
-            history_update.options["etf_family_pattern"],
-            history_update.options["etf_category_pattern"]]
-        history_update._scraper.groups = (1,)
-        family, category = history_update.get_ETF_family_category(symbol)
-    elif security_type == "stock":
-        # Update the regular expression patterns and attributes to collect
-        history_update._scraper.pattern_list = [
-            history_update.options["stock_assets_pattern"]]
-        history_update._scraper.findall = False
-        history_update._scraper.groups = None
-        assets = history_update.get_etf_total_assets(symbol)
-        cap = securitiesanalysis.utilities.get_cap(assets)
-        history_update._scraper.pattern_list = [
-            history_update.options["stock_category_pattern"]]
-        history_update._scraper.groups = (1, 2)
-        category = history_update.get_stock_category(symbol)
-        # Stocks do not belong to any family and should not be grouped with
-        # mutual funds and exchange traded funds marked "UNKNOWN"
-        family = None
-    else:
-        history_update.err.log(
-            "get metadata unknown type %s for %s %s" % (security_type,
-                                                        symbol, p))
-    history_update.log.log(
-        "got metadata for %s %s %s %s %s %s %s" % (symbol, security_type,
-                                                   assets, cap, category,
-                                                   family, p))
-    return assets, cap, category, family
-
-
-def scrape_EOD(history_update, eod_URL, initial_type):
-    """
-    Retrieves daily closing price and metadata for list extracted from URL.
-
-    Creates process pool to collect daily closing prices and metadata for all
-    extracted ticker symbols from the provided URL.  Should an exception be
-    thrown during processing an empty dataframe with the correct columns will
-    be returned.
-
-    Parameters
-    ----------
-    history_update : class
-        Instance containing access to log and error files along with regular
-        expression parsing object.
-    eod_URL : str
-        URL to generate list of securities from.
-    initial_type : str
-        "fund", "etf", or "stock" to indicate security type.
-
-    Returns
-    -------
-    obj
-        Columnar format containing ticker symbols, daily closing prices,
-        titles, and all metadata for every security scraped from the URL.
-
-    """
-    try:
-        p = multiprocessing.current_process().name
-        history_update.log.log("scrape EOD %s %s" % (eod_URL, p))
-        # Collect data matching the configured regular expressions from the
-        # passed in web page
-        data = history_update._scraper.scrape(eod_URL)
-        symbols = [d[0] for d in data[0]]
-        titles = [d[1] for d in data[0]]
-        # Remove commas from prices so data can be treated as numeric
-        prices = [d[2].replace(",", "") for d in data[0]]
-        security_types = [initial_type for d in data[0]]
-        # Create a concurrent process pool to execute the scraping in parallel
-        metadata_pool = securitiesanalysis.concurrent.Pool(
-            [(get_metadata, "process - get metadata %s" % s[0],
-              history_update.options["metadata_timeout"],
-              (-1, "UNKNOWN", "UNKNOWN", "UNKNOWN"),
-              [history_update, s], {}) for s in zip(symbols, security_types)],
-            history_update.options["metadata_pool_size"])
-        metadata_pool.execute()
-        metadata = metadata_pool.return_values
-        # Separate the metadata by field for insertion into a dataframe
-        assets = [m[0] for m in metadata]
-        cap = [m[1] for m in metadata]
-        categories = [m[2] for m in metadata]
-        families = [m[3] for m in metadata]
-        history_update.log.log("scraped EOD %s %s" % (eod_URL, p))
-    except:
-        history_update.err.log(
-            "scrape EOD generic error for %s %s %s"
-            % (eod_URL,
-               securitiesanalysis.utilities.format_error(sys.exc_info()),
-               p))
-        return pandas.DataFrame(index=list(),
-                                data={"type": list(), "title": list(),
-                                      "price": list(), "assets": list(),
-                                      "cap": list(), "category": list(),
-                                      "family": list()})
-    else:
-        return pandas.DataFrame(index=symbols,
-                                data={"type": security_types,
-                                      "title": titles, "price": prices,
-                                      "assets": assets, "cap": cap,
-                                      "category": categories,
-                                      "family": families})
 
 
 class HistoryUpdate(object):
@@ -254,13 +94,15 @@ class HistoryUpdate(object):
         """obj: List of messages to be included in body of summary email."""
         self.__applied_split_set = set(self.__options["applied_split_set"])
         """set: Collection of previous splits applied to history files."""
+        self.__data = None
+        """obj: All closing prices and metadata for each symbol."""
 
     def __initialize_directories__(self):
         """
         Ensures folders needed for processing are available.
 
         Checks to determine if all necessary directories have been previously
-        generated and creates them if needed. 
+        generated and creates them if needed.
 
         Returns
         -------
@@ -295,14 +137,14 @@ class HistoryUpdate(object):
         Sets up regular expression based web scraping utility.
 
         Configures the reusable web scraper with default parameters common to
-        all subsequent usage. 
+        all subsequent usage.
 
         """
         type(self)._scraper.timeout = self.__options["timeout_period"]
         type(self)._scraper.delay_time = self.__options["delay_time"]
         type(self)._scraper.max_retries = self.__options["max_retry_count"]
 
-    def get_fund_total_assets_category(self, symbol):
+    def __get_fund_total_assets_category(self, symbol):
         """
         Retrieves assets and category from configured online source.
 
@@ -369,7 +211,7 @@ class HistoryUpdate(object):
                        % (symbol, a, c, p))
         return a, c
 
-    def get_fund_family(self, symbol):
+    def __get_fund_family(self, symbol):
         """
         Retrieves family from configured online source.
 
@@ -393,7 +235,7 @@ class HistoryUpdate(object):
             matches = type(self)._scraper.scrape(
                 "%s%s" % (self.__options["fund_family_prefix_URL"], symbol))
             if matches[0]:
-                f = re.split("<\/span><span>", matches[0])[0]
+                f = re.split("</span><span>", matches[0])[0]
                 f = "UNKNOWN" if f == "--" else f
             else:
                 f = "UNKNOWN"
@@ -402,7 +244,7 @@ class HistoryUpdate(object):
         self.__log.log("got fund family for %s %s %s" % (symbol, f, p))
         return f
 
-    def get_etf_total_assets(self, symbol):
+    def __get_etf_total_assets(self, symbol):
         """
         Retrieves assets from configured online source.
 
@@ -445,7 +287,7 @@ class HistoryUpdate(object):
         self.__log.log("got etf total assets for %s %s %s" % (symbol, a, p))
         return a
 
-    def get_ETF_family_category(self, symbol):
+    def __get_etf_family_category(self, symbol):
         """
         Retrieves family and category from configured online source.
 
@@ -496,7 +338,7 @@ class HistoryUpdate(object):
             "got etf family and category for %s %s %s %s" % (symbol, f, c, p))
         return f, c
 
-    def get_stock_category(self, symbol):
+    def __get_stock_category(self, symbol):
         """
         Retrieves category from configured online source.
 
@@ -540,6 +382,156 @@ class HistoryUpdate(object):
         self.__log.log("got stock category for %s %s %s" % (symbol, c, p))
         return c
 
+    def get_metadata(self, symbol_tuple):
+        """
+        Retrieves daily closing price and metadata for each security.
+
+        Based on ticker symbol and security type, this function collects the
+        net assets or market capitalization, cap, category, and family.
+
+        Parameters
+        ----------
+        symbol_tuple : tuple
+            Tuple containing strings for ticket symbol and security type.
+
+        Returns
+        -------
+        assets : float
+            Net assets for mutual funds and exchange traded funds, market
+            capitalization for stocks.
+        cap : str
+            "large", "mid", or "small" defined by greater than $10B, between $2B
+            and $10B, and less than $2B.
+        category : str
+            Sector or grouping ticker symbol belongs to.
+        family : str
+            Only for mutual funds and exchange traded funds, the investment firm
+            managing the fund.
+
+        """
+        p = multiprocessing.current_process().name
+        symbol, security_type = symbol_tuple
+        self.__log.log(
+            "get metadata for %s %s %s" % (symbol, security_type, p))
+        # Provide default values in case security metadata fields are not
+        # available
+        assets, cap, category, family = -1, "UNKNOWN", "UNKNOWN", "UNKNOWN"
+        # Based on security type collect the appropriate metadata
+        if security_type == "fund":
+            # Update the regular expression patterns and attributes to collect
+            self._scraper.pattern_list = [
+                self.__options["fund_assets_pattern"],
+                self.__options["fund_category_pattern"]]
+            self._scraper.findall = False
+            assets, category = self.__get_fund_total_assets_category(
+                symbol)
+            cap = securitiesanalysis.utilities.get_cap(assets)
+            self._scraper.pattern_list = [
+                self.__options["fund_family_pattern"]]
+            family = self.__get_fund_family(symbol)
+        elif security_type == "etf":
+            # Update the regular expression patterns and attributes to collect
+            self._scraper.pattern_list = [
+                self.__options["fund_assets_pattern"]]
+            self._scraper.findall = False
+            assets = self.__get_etf_total_assets(symbol)
+            cap = securitiesanalysis.utilities.get_cap(assets)
+            self._scraper.pattern_list = [
+                self.__options["etf_family_pattern"],
+                self.__options["etf_category_pattern"]]
+            self._scraper.groups = (1,)
+            family, category = self.__get_etf_family_category(symbol)
+        elif security_type == "stock":
+            # Update the regular expression patterns and attributes to collect
+            self._scraper.pattern_list = [
+                self.__options["stock_assets_pattern"]]
+            self._scraper.findall = False
+            self._scraper.groups = None
+            assets = self.__get_etf_total_assets(symbol)
+            cap = securitiesanalysis.utilities.get_cap(assets)
+            self._scraper.pattern_list = [
+                self.__options["stock_category_pattern"]]
+            self._scraper.groups = (1, 2)
+            category = self.__get_stock_category(symbol)
+            # Stocks do not belong to any family and should not be grouped with
+            # mutual funds and exchange traded funds marked "UNKNOWN"
+            family = None
+        else:
+            self.__err.log(
+                "get metadata unknown type %s for %s %s" % (security_type,
+                                                            symbol, p))
+        self.__log.log(
+            "got metadata for %s %s %s %s %s %s %s" % (symbol, security_type,
+                                                       assets, cap, category,
+                                                       family, p))
+        return assets, cap, category, family
+
+    def scrape_eod(self, eod_url, initial_type):
+        """
+        Retrieves daily closing price and metadata for list extracted from URL.
+
+        Creates process pool to collect daily closing prices and metadata for all
+        extracted ticker symbols from the provided URL.  Should an exception be
+        thrown during processing an empty dataframe with the correct columns will
+        be returned.
+
+        Parameters
+        ----------
+        eod_url : str
+            URL to generate list of securities from.
+        initial_type : str
+            "fund", "etf", or "stock" to indicate security type.
+
+        Returns
+        -------
+        obj
+            Columnar format containing ticker symbols, daily closing prices,
+            titles, and all metadata for every security scraped from the URL.
+
+        """
+        p = multiprocessing.current_process().name
+        try:
+            self.__log.log("scrape eod %s %s" % (eod_url, p))
+            # Collect data matching the configured regular expressions from the
+            # passed in web page
+            data = self._scraper.scrape(eod_url)
+            symbols = [d[0] for d in data[0]]
+            titles = [d[1] for d in data[0]]
+            # Remove commas from prices so data can be treated as numeric
+            prices = [d[2].replace(",", "") for d in data[0]]
+            security_types = [initial_type for d in data[0]]
+            # Create a concurrent process pool to execute the scraping in
+            # parallel
+            with securitiesanalysis.utilities.NonDaemonicPool(
+                    processes=self.__options["metadata_pool_size"]) as pool:
+                metadata = pool.starmap(
+                    self.get_metadata,
+                    [(s,) for s in zip(symbols, security_types)])
+            # Separate the metadata by field for insertion into a dataframe
+            assets = [m[0] for m in metadata]
+            cap = [m[1] for m in metadata]
+            categories = [m[2] for m in metadata]
+            families = [m[3] for m in metadata]
+            self.__log.log("scraped eod %s %s" % (eod_url, p))
+        except:
+            self.__err.log(
+                "scrape eod generic error for %s %s %s"
+                % (eod_url,
+                   securitiesanalysis.utilities.format_error(sys.exc_info()),
+                   p))
+            return pandas.DataFrame(index=list(),
+                                    data={"type": list(), "title": list(),
+                                          "price": list(), "assets": list(),
+                                          "cap": list(), "category": list(),
+                                          "family": list()})
+        else:
+            return pandas.DataFrame(index=symbols,
+                                    data={"type": security_types,
+                                          "title": titles, "price": prices,
+                                          "assets": assets, "cap": cap,
+                                          "category": categories,
+                                          "family": families})
+
     def get_security_data(self):
         """
         Collects all data and metadata for generated lists of ticker symbols.
@@ -548,7 +540,7 @@ class HistoryUpdate(object):
         every security extracted from the lists of ticker symbols and stored
         in a dataframe.  Duplicate symbols are removed from the dataframe
         based on security type with precedence in order of etf, fund, and
-        stock. 
+        stock.
 
         Returns
         -------
@@ -567,15 +559,12 @@ class HistoryUpdate(object):
             # Create a concurrent process pool to execute the scraping of
             # symbol lists starting with each letter of the alphabet in
             # parallel
-            current_pool = securitiesanalysis.concurrent.Pool(
-                [(scrape_EOD, "process - get security data %s %s"
-                  % (self.__options["eod_URL_dict"][k], letter),
-                  None, None, [self, k % letter,
-                               self.__options["eod_URL_dict"][k]],
-                  {}) for letter in string.ascii_uppercase],
-                self.__options["eod_pool_size"])
-            current_pool.execute()
-            results_list.extend(current_pool.return_values)
+            with securitiesanalysis.utilities.NonDaemonicPool(
+                    processes=self.__options["eod_pool_size"]) as pool:
+                results_list.extend(pool.starmap(
+                    self.scrape_eod,
+                    [(k % letter, self.__options["eod_URL_dict"][k])
+                     for letter in string.ascii_uppercase]))
         data = pandas.concat(results_list)
         # Sorted alphabetically to ensure that when duplicate symbols are found
         # that exchange traded funds take precedence, then mutual funds
@@ -587,7 +576,7 @@ class HistoryUpdate(object):
         self.__log.log("got security data %s" % p)
         return data
 
-    def update_history(self, symbol, price):
+    def __update_history(self, symbol, price):
         """
         Updates security history file with latest daily closing price.
 
@@ -612,7 +601,7 @@ class HistoryUpdate(object):
         self.__log.log("updated history for %s on %s with %s %s"
                        % (symbol, str(self.__log_date), price, p))
 
-    def get_splits(self):
+    def __get_splits(self):
         """
         Retrieves information about recent splits.
 
@@ -650,7 +639,7 @@ class HistoryUpdate(object):
         self.__log.log("got splits %s" % p)
         return splits
 
-    def split_update(self, symbol, before, after, split_date):
+    def __split_update(self, symbol, before, after, split_date):
         """
         Corrects security history file daily closing prices given split.
 
@@ -698,7 +687,7 @@ class HistoryUpdate(object):
                 history["price"] = [round(
                     row["price"] * after / before, 2
                 ) if index < split_date else row["price"]
-                    for index, row in history.iterrows()]
+                                    for index, row in history.iterrows()]
                 history.index = old_index
                 history.to_csv(os.path.join(
                     self.__history_path, "%s.txt" % symbol),
@@ -735,15 +724,17 @@ class HistoryUpdate(object):
         self.__configure_scraper__()
         self.__log.log("starting update for %s" % str(self.__log_date))
         self.__data = self.get_security_data()
-        [self.update_history(index, row["price"]) for index,
-         row in self.__data.iterrows()]
+        [self.__update_history(index, row["price"]) for index,
+                                                        row in
+         self.__data.iterrows()]
         # Update the regular expression patterns and attributes to collect
         type(self)._scraper.pattern_list = [self.options["split_pattern"]]
         type(self)._scraper.findall = True
         type(self)._scraper.groups = None
-        [self.split_update(
+        [self.__split_update(
             index, row["before"], row["after"], row["date"]) for index,
-            row in self.get_splits().iterrows()]
+                                                                 row in
+            self.__get_splits().iterrows()]
         # Update the list of applied splits to avoid duplicate processing
         self.__options["applied_split_set"] = sorted(
             list(self.__applied_split_set))

@@ -49,14 +49,14 @@ result = setuptools.setup(
             "securities-analysis=securitiesanalysis.__main__:main"
         ]
     },
-    python_requires=">3.6.8",
+    python_requires=">3.9.1",
     install_requires=[
-        "numpy>=1.17.3",
-        "pandas>=0.25.3",
-        "requests>=2.22.0",
-        "scikit-learn>=0.20.0",
-        "scipy>=1.3.1",
-        "Xlsxwriter>=1.2.2"
+        "numpy>=1.19.2",
+        "pandas>=1.1.5",
+        "requests>=2.25.1",
+        "scikit-learn>=0.23.2",
+        "scipy>=1.5.2",
+        "xlsxwriter>=1.3.7"
     ],
     include_package_data=True,
     author="John Sonsini",
@@ -71,7 +71,7 @@ result = setuptools.setup(
         "Intended Audience :: Financial and Insurance Industry",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Office/Business :: Financial :: Investment",
         "Topic :: Scientific/Engineering :: Mathematics"
     ]

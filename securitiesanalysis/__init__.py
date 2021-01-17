@@ -2,7 +2,7 @@
 """Securities Analysis: Configurable Regression Analysis of Securities
 
 Securities Analysis is an open source package for performing non linear
-regression analysis on lists of mutual funds, exchange traded funds, and 
+regression analysis on lists of mutual funds, exchange traded funds, and
 stocks. The analysis is based on daily closing prices and is designed to be
 executed after market close via a cron job or equivalent scheduler.  All
 configuration parameters are specified in the options.json file located in the
@@ -16,12 +16,10 @@ history_update
 securities_analysis
     Performs regression analysis and generates aggregations based on collected
     metadata.
-concurrent
-    Parallel framework to execute thread pools.
 regex_webscraper
     Customizable web scraping utility with regular expression based extraction.
 utilities
-    Helpful common functions and logging class.
+    Helpful common functions and classes.
 
 Notes
 -----
@@ -43,7 +41,6 @@ from . import __main__ as main
 __all__ = [
     "history_update",
     "securities_analysis",
-    "concurrent",
     "regex_webscrapper",
     "utilities"
 ]
