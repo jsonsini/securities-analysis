@@ -2032,11 +2032,11 @@
         "1YA-6MF",
         "1YA-1YF"
     ],
-    "fund_assets_pattern": "(?<=Net assets<\\/span><\\/td><td class=\\\"wsod_quoteDataPoint\\\">\\$)[^<]*",
-    "fund_category_pattern": "[^>]*(?=<div class=\\\"wsod_quoteLabel\\\">Style or Category)",
+    "fund_assets_pattern": "(?<=Total Assets \\(M USD\\) \\(On \\d{2}/\\d{2}/\\d{4}\\)</span></span><span class=\\\"fieldValue__2d582aa7\\\">)[^<]+",
+    "fund_category_pattern": "(?<=Objective</span></span><span class=\\\"fundDetailsValue__84e81803\\\">)[^<]+",
     "fund_family_pattern": "(?<=<span class=\\\"first\\\">).*(?=<\\/span><\\/div><\\/td><td><form id=\\\"symbolSearch)",
     "fund_family_prefix_URL": "https://research.tdameritrade.com/grid/public/mutualfunds/profile/profile.asp?symbol=",
-    "fund_total_assets_category_prefix_URL": "http://money.cnn.com/quote/mutualfund/mutualfund.html?symb=",
+    "fund_total_assets_category_prefix_URL": "https://www.marketwatch.com/investing/fund/",
     "history_pattern": "(?<=Chart for ).*,([^\"]+)\">.*<\\/A><\\/td><td>(.*)<\\/td>.*<\\/td><td align=right>.*<\\/td><td align=right>(.*)<\\/td><td align=right>",
     "holidays": [
         "2000-01-17",

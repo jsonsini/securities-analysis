@@ -370,7 +370,7 @@ class HistoryUpdate(object):
             # To ensure later aggregations include all member securities map
             # the collected category to a standardized set in the configuration
             # file
-            if self.__options["category_mapping"]:
+            if c in self.__options["category_mapping"]:
                 c = self.__options["category_mapping"][c]
             else:
                 self.__log.log("warning - unmapped category of %s for %s"
