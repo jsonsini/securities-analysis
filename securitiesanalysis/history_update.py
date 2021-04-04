@@ -175,9 +175,8 @@ class HistoryUpdate(object):
             "get fund total assets and category for %s %s" % (symbol, p))
         try:
             matches = type(self)._scraper.scrape(
-                "%s%s" % (
-                    self.__options["fund_total_assets_category_prefix_URL"],
-                    symbol))
+                self.__options["fund_total_assets_category_prefix_URL"]
+                % symbol)
             a, c = matches[0], matches[1]
             # Multiply by the correct order of magnitude based on the trailing
             # character
@@ -244,12 +243,15 @@ class HistoryUpdate(object):
         self.__log.log("got fund family for %s %s %s" % (symbol, f, p))
         return f
 
-    def __get_etf_total_assets(self, symbol):
+    def __get_etf_total_assets_family_category(self, symbol):
         """
-        Retrieves assets from configured online source.
+        Retrieves assets, family, and category from configured online source.
 
-        Downloads and extracts asset information for passed ticker
-        symbol, transforming asset text to an integer value.
+        Downloads and extracts asset, family, and category information for
+        passed ticker symbol, finding the mapped category value.  If the
+        category value is not in the mapping then a warning message is included
+        in the email body with the results so that the options file can be
+        manually updated.
 
         Parameters
         ----------
@@ -258,52 +260,8 @@ class HistoryUpdate(object):
 
         Returns
         -------
-        a : int
-            Net Assets for Exchange Traded Fund.
-
-        """
-        p = multiprocessing.current_process().name
-        self.__log.log("get etf total assets for %s %s" % (symbol, p))
-        try:
-            matches = type(self)._scraper.scrape(
-                "%s%s" % (
-                    self.__options["fund_total_assets_category_prefix_URL"],
-                    symbol))
-            a = matches[0]
-            # Multiply by the correct order of magnitude based on the trailing
-            # character
-            if a[-1] == "K":
-                a = int(1000 * float(a[:-1]))
-            elif a[-1] == "M":
-                a = int(1000000 * float(a[:-1]))
-            elif a[-1] == "B":
-                a = int(1000000000 * float(a[:-1]))
-            elif a[-1] == "T":
-                a = int(1000000000000 * float(a[:-1]))
-            else:
-                a = -1
-        except:
-            a = -1
-        self.__log.log("got etf total assets for %s %s %s" % (symbol, a, p))
-        return a
-
-    def __get_etf_family_category(self, symbol):
-        """
-        Retrieves family and category from configured online source.
-
-        Downloads and extracts family and category information for passed
-        ticker symbol, finding the mapped category value.  If the category
-        value is not in the mapping then a warning message is included in the
-        email body with the results so that the options file can be manually
-        updated.
-
-        Parameters
-        ----------
-        symbol : str
-            Ticker symbol representing security.
-
-        Returns
-        -------
+        a : str
+            Net Assets for the fund.
         f : str
             Investment firm managing the fund.
         c : str
@@ -318,8 +276,8 @@ class HistoryUpdate(object):
             "get etf family and category for %s %s " % (symbol, p))
         try:
             matches = type(self)._scraper.scrape(
-                "%s%s" % (self.__options["etf_family_prefix_URL"], symbol))
-            f, c = matches[0], matches[1]
+                "%s%s" % (self.__options["etf_prefix_URL"], symbol))
+            a, f, c = str(int(float(matches[0]))), matches[1], matches[2]
             f = "UNKNOWN" if not f or not f.strip() else f
             c = "UNKNOWN" if not c or not c.strip() or c == "--" else c
             # To ensure later aggregations include all member securities map
@@ -333,19 +291,23 @@ class HistoryUpdate(object):
                 self.__message_list.append(
                     "warning - unmapped category of %s for %s" % (c, symbol))
         except:
+            a = -1
+            f = "UNKNOWN"
             c = "UNKNOWN"
         self.__log.log(
-            "got etf family and category for %s %s %s %s" % (symbol, f, c, p))
-        return f, c
+            "got etf assets, family, and category for %s %s %s %s %s"
+            % (symbol, a, f, c, p))
+        return a, f, c
 
-    def __get_stock_category(self, symbol):
+    def __get_stock_total_assets_category(self, symbol):
         """
-        Retrieves category from configured online source.
+        Retrieves assets and category from configured online source.
 
-        Downloads and extracts category information for passed ticker symbol,
-        finding the mapped category value.  If the category value is not in the
-        mapping then a warning message is included in the email body with the
-        results so that the options file can be manually updated.
+        Downloads and extracts assets and category information for passed
+        ticker symbol, finding the mapped category value.  If the category
+        value is not in the mapping then a warning message is included in the
+        email body with the results so that the options file can be manually
+        updated.
 
         Parameters
         ----------
@@ -354,6 +316,8 @@ class HistoryUpdate(object):
 
         Returns
         -------
+        a : str
+            Market capitalization for the stock.
         c : str
             Sector or grouping ticker symbol belongs to, standard mapping is
             defined in the options file such that any unmapped categories
@@ -362,11 +326,25 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("get stock category for %s %s" % (symbol, p))
+        self.__log.log("get stock assets and category for %s %s" % (symbol, p))
         try:
             matches = type(self)._scraper.scrape(
-                "%s%s" % (self.__options["stock_category_prefix_URL"], symbol))
-            c = matches[0][0].strip()
+                "%s%s" % (self.__options["stock_prefix_URL"], symbol))
+            a, c = matches[0], matches[1]
+            if a[-1] == "K":
+                a = int(1000 * float(a[:-1]))
+            elif a[-1] == "M":
+                a = int(1000000 * float(a[:-1]))
+            elif a[-1] == "B":
+                a = int(1000000000 * float(a[:-1]))
+            elif a[-1] == "T":
+                a = int(1000000000000 * float(a[:-1]))
+            else:
+                a = -1
+        except:
+            a = -1
+        try:
+            c = "UNKNOWN" if not c or c == "--" else c
             # To ensure later aggregations include all member securities map
             # the collected category to a standardized set in the configuration
             # file
@@ -379,8 +357,9 @@ class HistoryUpdate(object):
                     "warning - unmapped category of %s for %s" % (c, symbol))
         except:
             c = "UNKNOWN"
-        self.__log.log("got stock category for %s %s %s" % (symbol, c, p))
-        return c
+        self.__log.log("got stock assets and category for %s %s %s %s"
+                       % (symbol, a, c, p))
+        return a, c
 
     def get_metadata(self, symbol_tuple):
         """
@@ -423,36 +402,34 @@ class HistoryUpdate(object):
                 self.__options["fund_assets_pattern"],
                 self.__options["fund_category_pattern"]]
             self._scraper.findall = False
+            self._scraper.groups = (1,)
             assets, category = self.__get_fund_total_assets_category(
                 symbol)
             cap = securitiesanalysis.utilities.get_cap(assets)
             self._scraper.pattern_list = [
                 self.__options["fund_family_pattern"]]
+            self._scraper.groups = None
             family = self.__get_fund_family(symbol)
         elif security_type == "etf":
             # Update the regular expression patterns and attributes to collect
             self._scraper.pattern_list = [
-                self.__options["fund_assets_pattern"]]
-            self._scraper.findall = False
-            assets = self.__get_etf_total_assets(symbol)
-            cap = securitiesanalysis.utilities.get_cap(assets)
-            self._scraper.pattern_list = [
+                self.__options["etf_assets_pattern"],
                 self.__options["etf_family_pattern"],
                 self.__options["etf_category_pattern"]]
+            self._scraper.findall = False
             self._scraper.groups = (1,)
-            family, category = self.__get_etf_family_category(symbol)
+            assets, family, category = \
+                self.__get_etf_total_assets_family_category(symbol)
+            cap = securitiesanalysis.utilities.get_cap(assets)
         elif security_type == "stock":
             # Update the regular expression patterns and attributes to collect
             self._scraper.pattern_list = [
-                self.__options["stock_assets_pattern"]]
-            self._scraper.findall = False
-            self._scraper.groups = None
-            assets = self.__get_etf_total_assets(symbol)
-            cap = securitiesanalysis.utilities.get_cap(assets)
-            self._scraper.pattern_list = [
+                self.__options["stock_assets_pattern"],
                 self.__options["stock_category_pattern"]]
-            self._scraper.groups = (1, 2)
-            category = self.__get_stock_category(symbol)
+            self._scraper.findall = False
+            self._scraper.groups = (1,)
+            assets, category = self.__get_stock_total_assets_category(symbol)
+            cap = securitiesanalysis.utilities.get_cap(assets)
             # Stocks do not belong to any family and should not be grouped with
             # mutual funds and exchange traded funds marked "UNKNOWN"
             family = None
