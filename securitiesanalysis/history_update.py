@@ -273,11 +273,11 @@ class HistoryUpdate(object):
         """
         p = multiprocessing.current_process().name
         self.__log.log(
-            "get etf family and category for %s %s " % (symbol, p))
+            "get etf assets, family, and category for %s %s " % (symbol, p))
         try:
             matches = type(self)._scraper.scrape(
                 "%s%s" % (self.__options["etf_prefix_URL"], symbol))
-            a, f, c = str(int(float(matches[0]))), matches[1], matches[2]
+            a, f, c = int(float(matches[0])), matches[1], matches[2]
             f = "UNKNOWN" if not f or not f.strip() else f
             c = "UNKNOWN" if not c or not c.strip() or c == "--" else c
             # To ensure later aggregations include all member securities map
