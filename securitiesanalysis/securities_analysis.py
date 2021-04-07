@@ -719,7 +719,8 @@ class SecuritiesAnalysis(object):
             os.path.join(self.__report_path, "summary",
                          "%s.xlsx" % str(self.__log_date)))
         # Iterate over the dataframe list to populate each workbook page
-        [securitiesanalysis.utilities.add_sheet(workbook, h, r)
+        [securitiesanalysis.utilities.add_sheet(
+            workbook, h, r, self.__options["unquoted_comma_pattern"])
          for h, r in zip(self.__options["result_headers"], results)]
         workbook.close()
         self.__log.log("generated workbook %s" % p)

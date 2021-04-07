@@ -2342,5 +2342,6 @@
     "stock_assets_pattern": "Market cap</td><td class=\"wsod_quoteDataPoint\">\\$([^<]+)",
     "stock_category_pattern": "Industry</div><div class=\"wsod_fRight wsod_bold\">([^<]+)()",
     "stock_prefix_URL": "https://money.cnn.com/quote/quote.html?symb=",
-    "timeout_period": 30
+    "timeout_period": 30,
+    "unquoted_comma_pattern": ",(?=(?:[^\"']*[\"'][^\"']*[\"'])*[^\"']*$)"
 }
