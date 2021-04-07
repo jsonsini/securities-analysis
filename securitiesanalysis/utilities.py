@@ -137,7 +137,7 @@ def func(x, a, b):
     return a * pow(b, x)
 
 
-def add_sheet(workbook, name, frame, split_patern):
+def add_sheet(workbook, name, frame, split_pattern):
     """
     Places a new spreadsheet in workbook and populates with dataframe values.
 
@@ -152,14 +152,14 @@ def add_sheet(workbook, name, frame, split_patern):
         Title of spreadsheet.
     frame : obj
         Data to be iterated over and populate the spreadsheet.
-    split_patern : str
+    split_pattern : str
         Regular expression to separate values in each data frame row.
 
     """
     worksheet = workbook.add_worksheet(name)
     row = 0
     # Iterate over the dataframe rows
-    for line in [re.split(split_patern, f) for f in
+    for line in [re.split(split_pattern, f) for f in
                  frame.to_csv().split("\n")[:-1]]:
         column = 0
         # Iterate over the columns of each row
