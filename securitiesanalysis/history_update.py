@@ -277,7 +277,19 @@ class HistoryUpdate(object):
         try:
             matches = type(self)._scraper.scrape(
                 "%s%s" % (self.__options["etf_prefix_URL"], symbol))
-            a, f, c = int(float(matches[0])), matches[1], matches[2]
+            a, f, c = matches[0], matches[1], matches[2]
+            # Multiply by the correct order of magnitude based on the trailing
+            # character
+            if a[-1] == "K":
+                a = int(1000 * float(a[:-1]))
+            elif a[-1] == "M":
+                a = int(1000000 * float(a[:-1]))
+            elif a[-1] == "B":
+                a = int(1000000000 * float(a[:-1]))
+            elif a[-1] == "T":
+                a = int(1000000000000 * float(a[:-1]))
+            else:
+                a = -1
             f = "UNKNOWN" if not f or not f.strip() else f
             c = "UNKNOWN" if not c or not c.strip() or c == "--" else c
             # To ensure later aggregations include all member securities map

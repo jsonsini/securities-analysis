@@ -1987,7 +1987,7 @@
         "http://eoddata.com/stocklist/USMF/%s.htm": "fund"
     },
     "eod_pool_size": 10,
-    "etf_assets_pattern": ";Total Assets Under Management&quot;, &quot;value&quot;: ([^}]+)",
+    "etf_assets_pattern": "^(?:.*?(?:key-stat-title\\\">\\s*([^\\s]+))){3}",
     "etf_category_pattern": "Category Name</td>\\s+<td>([^<]+)",
     "etf_family_pattern": "Fund Owner Firm Name</td>\\s+<td>([^<]+)",
     "etf_prefix_URL": "https://ycharts.com/companies/",
