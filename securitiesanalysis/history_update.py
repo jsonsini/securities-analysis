@@ -291,6 +291,10 @@ class HistoryUpdate(object):
             else:
                 a = -1
             f = "UNKNOWN" if not f or not f.strip() else f
+        except:
+            a = -1
+            f = "UNKNOWN"
+        try:
             c = "UNKNOWN" if not c or not c.strip() or c == "--" else c
             # To ensure later aggregations include all member securities map
             # the collected category to a standardized set in the configuration
@@ -303,8 +307,6 @@ class HistoryUpdate(object):
                 self.__message_list.append(
                     "warning - unmapped category of %s for %s" % (c, symbol))
         except:
-            a = -1
-            f = "UNKNOWN"
             c = "UNKNOWN"
         self.__log.log(
             "got etf assets, family, and category for %s %s %s %s %s"

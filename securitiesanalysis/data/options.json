@@ -1989,10 +1989,10 @@
         "http://eoddata.com/stocklist/USMF/%s.htm": "fund"
     },
     "eod_pool_size": 10,
-    "etf_assets_pattern": "^(?:.*?(?:key-stat-title\\\">\\s*([^\\s]+))){3}",
-    "etf_category_pattern": "Category Name</td>\\s+<td>([^<]+)",
-    "etf_family_pattern": "Fund Owner Firm Name</td>\\s+<td>([^<]+)",
-    "etf_prefix_URL": "https://ycharts.com/companies/",
+    "etf_assets_pattern": "Net Assets\\s<br><span class=\\\"time-stamp\\\">[^<]+</span></h4>\\s*<p>\\$([^<]+)",
+    "etf_category_pattern": "Asset Class</h4>\\s*<p[^>]+>([^<]+)",
+    "etf_family_pattern": "Sponsor</h4>\\s*<p>([^<]+)",
+    "etf_prefix_URL": "https://screener.fidelity.com/ftgw/etf/goto/snapshot/snapshot.jhtml?symbols=",
     "fit_columns": [
         "1YA-1MF",
         "1YA-3MF",
