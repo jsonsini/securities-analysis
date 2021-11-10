@@ -1990,10 +1990,10 @@
         "http://eoddata.com/stocklist/USMF/%s.htm": "fund"
     },
     "eod_pool_size": 10,
-    "etf_assets_pattern": "Net Assets\\s<br><span class=\\\"time-stamp\\\">[^<]+</span></h4>\\s*<p>\\$([^<]+)",
-    "etf_category_pattern": "Asset Class</h4>\\s*<p[^>]+>([^<]+)",
-    "etf_family_pattern": "Sponsor</h4>\\s*<p>([^<]+)",
-    "etf_prefix_URL": "https://screener.fidelity.com/ftgw/etf/goto/snapshot/snapshot.jhtml?symbols=",
+    "etf_assets_pattern": "Total Assets</th><td>\\$([^<]+)",
+    "etf_category_pattern": "Morningstar Category DB: </label><strong>([^<]+)",
+    "etf_family_pattern": "Fund Company</th><td class=\\\"normalWrap\\\"><span>([^<]+)",
+    "etf_prefix_URL": "https://www.schwab.wallst.com/Prospect/Research/etfs/summary.asp?symbol=",
     "fit_columns": [
         "1YA-1MF",
         "1YA-3MF",
