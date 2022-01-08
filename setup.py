@@ -31,7 +31,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU Affero General Public License v3
 (https://www.gnu.org/licenses/agpl.html) for more details.
 
-Copyright (C) 2021 John Sonsini.  All rights reserved.  Source code available
+Copyright (C) 2022 John Sonsini.  All rights reserved.  Source code available
 under the AGPLv3.
 
 """
@@ -49,7 +49,7 @@ result = setuptools.setup(
             "securities-analysis=securitiesanalysis.__main__:main"
         ]
     },
-    python_requires=">3.9.1",
+    python_requires=">3.6",
     install_requires=[
         "numpy>=1.19.2",
         "pandas>=1.1.5",
@@ -71,7 +71,7 @@ result = setuptools.setup(
         "Intended Audience :: Financial and Insurance Industry",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.6",
         "Topic :: Office/Business :: Financial :: Investment",
         "Topic :: Scientific/Engineering :: Mathematics"
     ]
