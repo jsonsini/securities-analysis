@@ -82,7 +82,7 @@ where
 Stocks and Exchange Traded Funds are updated to reflect any splits, at this time a free and consolidated source for Mutual Fund splits was not found so price increases/decreases due to those splits are not corrected in the history files for the corresponding ticker symbols.
 
 ### Additional Information
-The accumulated history of all securities from the beginning of 2015 onwards is available in tar.gz and zip formats for downloading in the event users would like to benefit from pre-collected data.  No code relies on these files, they are simply to be decompressed in the history subdirectory of the configured root folder before the first execution.  If another source using the same format is used instead care should be taken to update the applied splits portion of the options.json file to reflect the status of associated stocks and exchange traded funds correctly.
+The accumulated history of all securities from the beginning of 2015 onwards is available in tar.gz format upon request, formerly this was made available in the repository but the size of the commit history was not in line with the recommendations.  No code relies on these files, they are simply to be decompressed in the history subdirectory of the configured root folder before the first execution.  If another source using the same format is used instead care should be taken to update the applied splits portion of the options.json file to reflect the status of associated stocks and exchange traded funds correctly.
 
 ### License Information
 Securities Analysis is distributed under the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl.html) as open source software with attribution required.
