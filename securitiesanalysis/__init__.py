@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Securities Analysis: Configurable Regression Analysis of Securities
+"""
+Securities Analysis: Configurable Regression Analysis of Securities
 
 Securities Analysis is an open source package for performing non linear
 regression analysis on lists of mutual funds, exchange traded funds, and
@@ -41,6 +42,6 @@ from . import __main__ as main
 __all__ = [
     "history_update",
     "securities_analysis",
-    "regex_webscrapper",
+    "regex_webscraper",
     "utilities"
 ]

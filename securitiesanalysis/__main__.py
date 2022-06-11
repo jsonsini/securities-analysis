@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Securities Analysis: Configurable Regression Analysis of Securities
+"""
+Securities Analysis: Configurable Regression Analysis of Securities
 
 Securities Analysis is an open source package for performing non linear
 regression analysis on lists of mutual funds, exchange traded funds, and
@@ -98,9 +99,9 @@ def main():
     """
     options, root = load_options()
     # Check to determine if current date is a trading day
-    if not is_trading_day(datetime.date.today(), options["holidays"]):
-        print("%s is not a trading day, exiting" % str(datetime.date.today()))
-        sys.exit(0)
+    # if not is_trading_day(datetime.date.today(), options["holidays"]):
+    #     print("%s is not a trading day, exiting" % str(datetime.date.today()))
+    #     sys.exit(0)
     h = securitiesanalysis.history_update.HistoryUpdate(options)
     # Update the security histories
     h.execute()

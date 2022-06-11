@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Securities Analysis: Configurable Regression Analysis of Securities
+"""
+Securities Analysis: Configurable Regression Analysis of Securities
 
 Securities Analysis is an open source package for performing non linear
 regression analysis on lists of mutual funds, exchange traded funds, and
