@@ -21,7 +21,7 @@ The directory structure under a customizable root folder is as follows:
  * Logs - Messages indicating normal operation, useful for debugging unexpected results
  * Errors - Messages reflecting issues during execution, most often due to network connection or read timeout errors
 
-The root folder is specified in the options.json located in the installation directory under the data subdirectory.
+The root folder is specified in the options.json file located in the installation directory under the data subdirectory.
 
 ### Collected Data/Metadata
 The list of securities is generated at run time by scraping a collection of webpages configured via the options.json file, the default set of pages are from [http://eoddata.com](http://eoddata.com) and the regular expression to extract relevant information is specified by the `history_pattern` entry.  Both can be replaced with a custom mapping of websites indexed by letter and the appropriate regular expression to extract ticker symbols, titles, and daily closing prices.
