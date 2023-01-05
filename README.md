@@ -90,4 +90,4 @@ Securities Analysis is distributed under the [GNU Affero General Public License 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the [GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl.html) for more details.
 
-Copyright (C) 2022 John Sonsini.  All rights reserved.  Source code available under the AGPLv3.
+Copyright (C) 2023 John Sonsini.  All rights reserved.  Source code available under the AGPLv3.
