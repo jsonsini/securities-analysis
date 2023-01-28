@@ -7,9 +7,9 @@ closing prices for all securities, downloads the relevant metadata for each
 ticker symbol, updates the corresponding history files, and corrects histories
 for any new splits found.
 
-The HistoryUpdate class is the main class for processing daily updates with the
-exception of two functions, get_metadata and scrape_EOD, that due to pickling
-limitations of the concurrent module are not implemented as instance methods.
+The HistoryUpdate class is the main class for processing daily updates based on
+the configured parameters defining local paths, URL addresses, and regular
+expressions to parse closing prices and associated metadata for each security.
 
 Notes
 -----
