@@ -56,6 +56,10 @@ def load_options():
                      "utf-8") as options_file:
         options = json.loads(options_file.read())
     return options, root
+    # with codecs.open("/home/john/data_backup/options.json", "r",
+    #                  "utf-8") as options_file:
+    #     options = json.loads(options_file.read())
+    # return options, ""
 
 
 def is_trading_day(d, holidays):
@@ -99,9 +103,9 @@ def main():
     """
     options, root = load_options()
     # Check to determine if current date is a trading day
-    # if not is_trading_day(datetime.date.today(), options["holidays"]):
-    #     print("%s is not a trading day, exiting" % str(datetime.date.today()))
-    #     sys.exit(0)
+    if not is_trading_day(datetime.date.today(), options["holidays"]):
+        print("%s is not a trading day, exiting" % str(datetime.date.today()))
+        sys.exit(0)
     h = securitiesanalysis.history_update.HistoryUpdate(options)
     # Update the security histories
     h.execute()
@@ -109,6 +113,9 @@ def main():
     with codecs.open(os.path.join(root, "data", "options.json"), "w",
                      "utf-8") as options_file:
         options_file.write(json.dumps(h.options, indent=4, sort_keys=True))
+    # with codecs.open("/home/john/data_backup/options.json", "w",
+    #                  "utf-8") as options_file:
+    #     options_file.write(json.dumps(h.options, indent=4, sort_keys=True))
     s = securitiesanalysis.securities_analysis.SecuritiesAnalysis(
         h.root_path, h.options, h.data, h.message_list, h.log_date, h.log,
         h.err)
