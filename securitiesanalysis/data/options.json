@@ -1884,6 +1884,7 @@
         "SNFCA 21.0 20.0 2022.49589",
         "SNFCA 41.0 40.0 2020.519126",
         "SNGX 1.0 15.0 2023.112329",
+        "SNMP 1.0 30.0 2023.452055",
         "SNPX 1.0 4.0 2021.380822",
         "SNSS 1.0 10.0 2020.674863",
         "SNSS 2.0 7.0 2021.153425",
@@ -2425,6 +2426,7 @@
         "World Small/Mid Stock": "World Stock"
     },
     "collect_columns": [
+        "symbol",
         "title",
         "price",
         "type",
@@ -2443,25 +2445,6 @@
         "3YDA",
         "3YDF"
     ],
-    "collect_types": {
-        "1YA": "numpy.float16",
-        "1YF": "numpy.float16",
-        "2YA": "numpy.float16",
-        "2YDA": "numpy.float16",
-        "2YDF": "numpy.float16",
-        "2YF": "numpy.float16",
-        "3YA": "numpy.float16",
-        "3YDA": "numpy.float16",
-        "3YDF": "numpy.float16",
-        "3YF": "numpy.float16",
-        "assets": "int",
-        "cap": "str",
-        "category": "str",
-        "family": "str",
-        "price": "float",
-        "title": "str",
-        "type": "str"
-    },
     "column_order": [
         "title",
         "price",
@@ -2572,7 +2555,7 @@
         "3YDF-1YF"
     ],
     "delay_time": 60,
-    "email_address": "geranium.bakery@gmail.com",
+    "email_address": "thisisnot@myemail.com",
     "email_password": "this is not my password",
     "eod_URL_dict": {
         "http://eoddata.com/stocklist/AMEX/%s.htm": "etf",
