@@ -260,23 +260,30 @@ class SecuritiesAnalysis(object):
                 history.index[0] <= self.__ranges["start"][i] for i in
                 self.__ranges.index]
             # Find the dataframe indices closest to the range boundaries
-            closest_indices = [(history.index.get_loc(
-                self.__ranges["start"][i], method="nearest"),
-                                history.index.get_loc(self.__ranges["end"][i],
-                                                      method="nearest"))
-                               if fill_period[i] else numpy.nan for i in
-                               range(len(fill_period))]
+            # closest_indices = [(history.index.get_loc(
+            #     self.__ranges["start"][i], method="nearest"),
+            #                     history.index.get_loc(self.__ranges["end"][i],
+            #                                           method="nearest"))
+            #                    if fill_period[i] else numpy.nan for i in
+            #                    range(len(fill_period))]
+
+            closest_indices = [
+                (history.index.get_indexer(
+                    [self.__ranges["start"][i]], method="nearest"),
+                 history.index.get_indexer(
+                     [self.__ranges["end"][i]], method="nearest"))
+                if fill_period[i] else numpy.nan for i in
+                range(len(fill_period))]
             closest_dates = [(history.index[c[0]],
                               history.index[c[1]]) if c is not numpy.nan
                              else numpy.nan for c in closest_indices]
             # Calculate the ratio of start and end price for each period
             actual = [
-                "%.6f"
-                % (1 + (history.loc[d[1]]["price"]
-                        / history.loc[d[0]]["price"] - 1) / (d[1] - d[0]))
-                if d is not numpy.nan and not
-                history.loc[d[0]]["price"] == 0 else numpy.nan for d in
-                closest_dates]
+                "%.6f" % (1 + (history.loc[d[1][0]]["price"]
+                               / history.loc[d[0][0]]["price"] - 1)
+                          / (d[1][0] - d[0][0])) if d is not numpy.nan and
+                not history.loc[d[0][0]]["price"] == 0
+                else numpy.nan for d in closest_dates]
             # Generate the fits of the same periods and collect the growth rate
             fit = [["%.6f"
                     % v for v in self.get_fit(
@@ -314,16 +321,16 @@ class SecuritiesAnalysis(object):
         rmse = [[i[2] for i in af[1]] for af in actual_fit]
         # Extract the list for each period and value for the dataframe
         self.__data["3YA"], self.__data["3YDA"], self.__data["2YA"], \
-        self.__data["2YDA"], self.__data["1YA"] = \
+            self.__data["2YDA"], self.__data["1YA"] = \
             tuple([[a[i] for a in actual] for i in range(5)])
         self.__data["3YF"], self.__data["3YDF"], self.__data["2YF"], \
-        self.__data["2YDF"], self.__data["1YF"] = \
+            self.__data["2YDF"], self.__data["1YF"] = \
             tuple([[f[i] for f in fit] for i in range(5)])
         self.__data["3YR2"], self.__data["3YDR2"], self.__data["2YR2"], \
-        self.__data["2YDR2"], self.__data["1YR2"] = \
+            self.__data["2YDR2"], self.__data["1YR2"] = \
             tuple([[r[i] for r in r2] for i in range(5)])
         self.__data["3YRMSE"], self.__data["3YDRMSE"], self.__data["2YRMSE"], \
-        self.__data["2YDRMSE"], self.__data["1YRMSE"] = \
+            self.__data["2YDRMSE"], self.__data["1YRMSE"] = \
             tuple([[r[i] for r in rmse] for i in range(5)])
         self.__log.log("got regression coefficients %s" % p)
 
@@ -353,8 +360,8 @@ class SecuritiesAnalysis(object):
              )) for r in os.listdir(os.path.join(self.__report_path, "data"))]
         # Filter the list to just over the prior year's worth of reports
         reports = [(pandas.read_csv(r[0], sep="|", header=0,
-                                    names=self.__options["column_order"],
-                                    dtype=self.__collect_types, index_col=0),
+                                    index_col=0,
+                                    usecols=self.__options["collect_columns"]),
                     r[1]
                     ) for r in sorted(report_paths) if
                    securitiesanalysis.utilities.get_yearfrac(
@@ -426,7 +433,7 @@ class SecuritiesAnalysis(object):
             "grouping reports for %s %s" % (str(self.__log_date), p))
         # Create list of dataframes based on ticker symbol
         grouped_reports = [group for _,
-                                     group in reports.groupby(reports.index)]
+        group in reports.groupby(reports.index)]
         # Move the date column to the index for each dataframe
         for i in range(len(grouped_reports)):
             symbol = grouped_reports[i].index[0]
@@ -523,11 +530,12 @@ class SecuritiesAnalysis(object):
                 self.__summary_ranges.index]
             # Find the dataframe indices closest to the range boundaries
             closest_indices = [
-                (frame.index.get_loc(self.__summary_ranges["start"][i],
-                                     method="nearest"),
-                 frame.index.get_loc(self.__summary_ranges["end"][i],
-                                     method="nearest")) if fill_period[i]
-                else numpy.nan for i in range(len(fill_period))]
+                (frame.index.get_indexer(
+                    [self.__summary_ranges["start"][i]], method="nearest"),
+                 frame.index.get_indexer(
+                     [self.__summary_ranges["end"][i]], method="nearest"))
+                if fill_period[i] else numpy.nan for i in
+                range(len(fill_period))]
             closest_dates = [
                 (frame.index[ci[0]], frame.index[ci[1]])
                 if ci is not numpy.nan else numpy.nan
@@ -535,16 +543,16 @@ class SecuritiesAnalysis(object):
             # Calculate the ratio of start and end fit for each period
             actual = {
                 s: ["%.6f"
-                    % (1 + (frame.loc[d[1]][s] / frame.loc[d[0]][s] - 1)
-                       / (d[1] - d[0])) if d is not numpy.nan and
-                                           not frame.loc[d[0]][
-                                                   s] == 0 else numpy.nan
+                    % (1 + (frame.loc[d[1][0]][s] / frame.loc[d[0][0]][s] - 1)
+                       / (d[1][0] - d[0][0])) if d is not numpy.nan and
+                                                 not frame.loc[d[0][0]][
+                                                         s] == 0 else numpy.nan
                     for d in closest_dates] for s in c}
             # Generate the fits of the same periods and collect the linear rate
             fit = {
                 s: ["%.6f"
-                    % (self.get_summary_fit(frame[s][closest_dates[i][0]:
-                                                     closest_dates[i][1]],
+                    % (self.get_summary_fit(frame[s][closest_dates[i][0][0]:
+                                                     closest_dates[i][1][0]],
                                             symbol, s))
                     if fill_period[i] else numpy.nan
                     for i in range(len(fill_period))] for s in c}
@@ -595,9 +603,10 @@ class SecuritiesAnalysis(object):
                 results_dict["%s-%sF" % (c, s[i])] = [fit[j][c][i] for j in
                                                       range(len(fit))]
         results_dict["symbol"] = symbol
-        results = pandas.DataFrame.from_dict(results_dict, dtype=numpy.float16)
+        results = pandas.DataFrame.from_dict(results_dict)
         # Move the symbol column to the index
         results.index = results.pop("symbol")
+        results = results.astype(numpy.float16)
         self.__log.log("got summary regression coefficients %s" % p)
         return results
 
@@ -721,7 +730,7 @@ class SecuritiesAnalysis(object):
         # Iterate over the dataframe list to populate each workbook page
         [securitiesanalysis.utilities.add_sheet(
             workbook, h, r, self.__options["unquoted_comma_pattern"])
-         for h, r in zip(self.__options["result_headers"], results)]
+            for h, r in zip(self.__options["result_headers"], results)]
         workbook.close()
         self.__log.log("generated workbook %s" % p)
 

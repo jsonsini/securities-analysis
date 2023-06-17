@@ -35,6 +35,7 @@ import string
 import sys
 
 import pandas
+import requests.packages
 
 import securitiesanalysis.regex_webscraper
 import securitiesanalysis.utilities
@@ -96,6 +97,8 @@ class HistoryUpdate(object):
         """set: Collection of previous splits applied to history files."""
         self.__data = None
         """obj: All closing prices and metadata for each symbol."""
+        requests.packages.urllib3.disable_warnings(
+            requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
     def __initialize_directories__(self):
         """
