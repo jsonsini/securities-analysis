@@ -2581,7 +2581,7 @@
         "3YDF-1YF"
     ],
     "delay_time": 60,
-    "email_address": "thisisnot@myemail.com",
+    "email_address": "geranium.bakery@gmail.com",
     "email_password": "this is not my password",
     "eod_URL_dict": {
         "http://eoddata.com/stocklist/AMEX/%s.htm": "etf",
