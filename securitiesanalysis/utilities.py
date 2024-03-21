@@ -28,7 +28,6 @@ under the AGPLv3.
 
 """
 import calendar
-import datetime
 import multiprocessing.pool
 import re
 
@@ -220,72 +219,3 @@ class NonDaemonicPool(multiprocessing.pool.Pool):
         """
         kwargs["context"] = NonDaemonicContext()
         super(NonDaemonicPool, self).__init__(*args, **kwargs)
-
-
-class Logger(object):
-    """
-    Simple logging utility with customizable time stamp format.
-
-    Provides minimal logging functionality, prepending chosen time stamp format
-    to each logged message written to the file path specified.
-
-    """
-
-    def __init__(self, log_path, time_format="%Y-%m-%d %H:%M:%S.%f"):
-        """
-        Prepares all needed instance variables for execution.
-
-        Sets up the logging path and time stamp format.
-
-        Parameters
-        ----------
-        log_path : str
-            Absolute path to log file.
-        time_format : str
-            Information from current time to be prepended to messages.
-
-        """
-        self.__log_path = log_path
-        """str: Absolute path to log file."""
-        self.__time_format = time_format
-        """str: Information from current time to be prepended to messages."""
-
-    def log(self, message):
-        """
-        Appends message to log file .
-
-        Based on the previously specified absolute log path, concatenates the
-        current time to the message and adds the resulting string to the file.
-
-        Parameters
-        ----------
-        message : str
-            String to be appended to log file.
-
-        """
-        with open(self.__log_path, "a+") as out:
-            out.write("[%s] %s\n" % (
-                datetime.datetime.now().strftime(self.__time_format),
-                message))
-
-    @property
-    def log_path(self):
-        """str: Absolute path to log file."""
-        return self.__log_path
-
-    @log_path.setter
-    def log_path(self, log_path):
-        self.__log_path = log_path
-
-    @property
-    def time_format(self):
-        """str: Information from current time to be prepended to messages."""
-        return self.__time_format
-
-    @time_format.setter
-    def time_format(self, time_format):
-        self.__time_format = time_format
-
-
-if __name__ == '__main__':
-    pass

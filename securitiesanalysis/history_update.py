@@ -28,6 +28,7 @@ under the AGPLv3.
 """
 import codecs
 import datetime
+import logging.config
 import multiprocessing
 import os
 import re
@@ -76,20 +77,15 @@ class HistoryUpdate(object):
         """str: Folder containing all relevant subdirectories."""
         self.__log_path = os.path.join(self.__root_path, "logs")
         """str: Folder containing log message files."""
-        self.__error_path = os.path.join(self.__root_path, "errors")
-        """str: Folder containing error message files."""
         self.__history_path = os.path.join(self.__root_path, "history")
         """str: Folder containing security history files."""
         self.__report_path = os.path.join(self.__root_path, "reports")
         """str: Folder containing all output directories and files."""
         self.__log_date = datetime.date.today()
         """date: Day of execution."""
-        self.__log = securitiesanalysis.utilities.Logger(
-            os.path.join(self.__log_path, "%s.log" % self.__log_date))
+        logging.config.dictConfig(self.__options["logging_config"])
+        self.__logger = logging.getLogger("securities_analysis")
         """obj: Logging utility for standard operating messages."""
-        self.__err = securitiesanalysis.utilities.Logger(
-            os.path.join(self.__error_path, "%s.log" % self.__log_date))
-        """obj: Logging utility for unexpected messages."""
         self.__message_list = ["market summary for %s" % str(self.__log_date),
                                ""]
         """obj: List of messages to be included in body of summary email."""
@@ -118,8 +114,6 @@ class HistoryUpdate(object):
                 os.makedirs(self.__root_path)
             if not os.path.exists(self.__log_path):
                 os.makedirs(self.__log_path)
-            if not os.path.exists(self.__error_path):
-                os.makedirs(self.__error_path)
             if not os.path.exists(self.__history_path):
                 os.makedirs(self.__history_path)
             if not os.path.exists(self.__report_path):
@@ -174,7 +168,7 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log(
+        self.__logger.info(
             "get fund total assets and category for %s %s" % (symbol, p))
         try:
             matches = type(self)._scraper.scrape(
@@ -203,14 +197,14 @@ class HistoryUpdate(object):
             if c in self.__options["category_mapping"]:
                 c = self.__options["category_mapping"][c]
             else:
-                self.__log.log("warning - unmapped category of %s for %s"
-                               % (c, symbol))
+                self.__logger.warning("warning - unmapped category of %s for %s"
+                                      % (c, symbol))
                 self.__message_list.append(
                     "warning - unmapped category of %s for %s" % (c, symbol))
         except:
             c = "UNKNOWN"
-        self.__log.log("got fund total assets and category for %s %s %s %s"
-                       % (symbol, a, c, p))
+        self.__logger.info("got fund total assets and category for %s %s %s %s"
+                           % (symbol, a, c, p))
         return a, c
 
     def __get_fund_family(self, symbol):
@@ -232,18 +226,14 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("get fund family for %s %s" % (symbol, p))
+        self.__logger.info("get fund family for %s %s" % (symbol, p))
         try:
             matches = type(self)._scraper.scrape(
-                "%s%s" % (self.__options["fund_family_prefix_URL"], symbol))
-            if matches[0]:
-                f = re.split("</span><span>", matches[0])[0]
-                f = "UNKNOWN" if f == "--" else f
-            else:
-                f = "UNKNOWN"
+                self.__options["fund_family_prefix_URL"] % symbol)
+            f = matches[0] if matches[0] else "UNKNOWN"
         except:
             f = "UNKNOWN"
-        self.__log.log("got fund family for %s %s %s" % (symbol, f, p))
+        self.__logger.info("got fund family for %s %s %s" % (symbol, f, p))
         return f
 
     def __get_etf_total_assets_family_category(self, symbol):
@@ -263,7 +253,7 @@ class HistoryUpdate(object):
 
         Returns
         -------
-        a : str
+        a : int
             Net Assets for the fund.
         f : str
             Investment firm managing the fund.
@@ -275,7 +265,7 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log(
+        self.__logger.info(
             "get etf assets, family, and category for %s %s " % (symbol, p))
         try:
             matches = type(self)._scraper.scrape(
@@ -305,13 +295,13 @@ class HistoryUpdate(object):
             if c in self.__options["category_mapping"]:
                 c = self.__options["category_mapping"][c]
             else:
-                self.__log.log("warning - unmapped category of %s for %s"
-                               % (c, symbol))
+                self.__logger.warning("warning - unmapped category of %s for %s"
+                                      % (c, symbol))
                 self.__message_list.append(
                     "warning - unmapped category of %s for %s" % (c, symbol))
         except:
             c = "UNKNOWN"
-        self.__log.log(
+        self.__logger.info(
             "got etf assets, family, and category for %s %s %s %s %s"
             % (symbol, a, f, c, p))
         return a, f, c
@@ -333,7 +323,7 @@ class HistoryUpdate(object):
 
         Returns
         -------
-        a : str
+        a : int
             Market capitalization for the stock.
         c : str
             Sector or grouping ticker symbol belongs to, standard mapping is
@@ -343,39 +333,31 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("get stock assets and category for %s %s" % (symbol, p))
+        self.__logger.info("get stock assets and category for %s %s"
+                           % (symbol, p))
         try:
             matches = type(self)._scraper.scrape(
-                "%s%s" % (self.__options["stock_prefix_URL"], symbol))
+                self.__options["stock_prefix_URL"] % symbol)
             a, c = matches[0], matches[1]
-            if a[-1] == "K":
-                a = int(1000 * float(a[:-1]))
-            elif a[-1] == "M":
-                a = int(1000000 * float(a[:-1]))
-            elif a[-1] == "B":
-                a = int(1000000000 * float(a[:-1]))
-            elif a[-1] == "T":
-                a = int(1000000000000 * float(a[:-1]))
-            else:
-                a = -1
+            a = int(a.replace(",", ""))
         except:
             a = -1
         try:
-            c = "UNKNOWN" if not c or c == "--" else c
+            c = "UNKNOWN" if not c or c == "-" else c
             # To ensure later aggregations include all member securities map
             # the collected category to a standardized set in the configuration
             # file
             if c in self.__options["category_mapping"]:
                 c = self.__options["category_mapping"][c]
             else:
-                self.__log.log("warning - unmapped category of %s for %s"
-                               % (c, symbol))
+                self.__logger.warning("warning - unmapped category of %s for %s"
+                                      % (c, symbol))
                 self.__message_list.append(
                     "warning - unmapped category of %s for %s" % (c, symbol))
         except:
             c = "UNKNOWN"
-        self.__log.log("got stock assets and category for %s %s %s %s"
-                       % (symbol, a, c, p))
+        self.__logger.info("got stock assets and category for %s %s %s %s"
+                           % (symbol, a, c, p))
         return a, c
 
     def get_metadata(self, symbol_tuple):
@@ -407,7 +389,7 @@ class HistoryUpdate(object):
         """
         p = multiprocessing.current_process().name
         symbol, security_type = symbol_tuple
-        self.__log.log(
+        self.__logger.info(
             "get metadata for %s %s %s" % (symbol, security_type, p))
         # Provide default values in case security metadata fields are not
         # available
@@ -425,7 +407,6 @@ class HistoryUpdate(object):
             cap = securitiesanalysis.utilities.get_cap(assets)
             self._scraper.pattern_list = [
                 self.__options["fund_family_pattern"]]
-            self._scraper.groups = None
             family = self.__get_fund_family(symbol)
         elif security_type == "etf":
             # Update the regular expression patterns and attributes to collect
@@ -451,10 +432,10 @@ class HistoryUpdate(object):
             # mutual funds and exchange traded funds marked "UNKNOWN"
             family = None
         else:
-            self.__err.log(
+            self.__logger.error(
                 "get metadata unknown type %s for %s %s" % (security_type,
                                                             symbol, p))
-        self.__log.log(
+        self.__logger.info(
             "got metadata for %s %s %s %s %s %s %s" % (symbol, security_type,
                                                        assets, cap, category,
                                                        family, p))
@@ -485,7 +466,7 @@ class HistoryUpdate(object):
         """
         p = multiprocessing.current_process().name
         try:
-            self.__log.log("scrape eod %s %s" % (eod_url, p))
+            self.__logger.info("scrape eod %s %s" % (eod_url, p))
             # Collect data matching the configured regular expressions from the
             # passed in web page
             data = self._scraper.scrape(eod_url)
@@ -506,9 +487,9 @@ class HistoryUpdate(object):
             cap = [m[1] for m in metadata]
             categories = [m[2] for m in metadata]
             families = [m[3] for m in metadata]
-            self.__log.log("scraped eod %s %s" % (eod_url, p))
+            self.__logger.info("scraped eod %s %s" % (eod_url, p))
         except:
-            self.__err.log(
+            self.__logger.error(
                 "scrape eod generic error for %s %s %s"
                 % (eod_url,
                    securitiesanalysis.utilities.format_error(sys.exc_info()),
@@ -543,7 +524,7 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("get security data %s" % p)
+        self.__logger.info("get security data %s" % p)
         results_list = list()
         # Loop over the configured dictionary of security lists
         for k in sorted(self.__options["eod_URL_dict"].keys()):
@@ -567,7 +548,7 @@ class HistoryUpdate(object):
         data = data[~data.index.duplicated(keep="first")]
         data.sort_index(inplace=True)
         data.index.name = "symbol"
-        self.__log.log("got security data %s" % p)
+        self.__logger.info("got security data %s" % p)
         return data
 
     def __update_history(self, symbol, price):
@@ -586,13 +567,13 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("updating history for %s on %s with %s %s"
+        self.__logger.info("updating history for %s on %s with %s %s"
                        % (symbol, str(self.__log_date), price, p))
         with codecs.open(os.path.join(self.__history_path, "%s.txt" % symbol),
                          "a+", "utf-8") as history_file:
             # Appends the current closing price to the security history file
             history_file.write("%s %s\n" % (str(self.__log_date), price))
-        self.__log.log("updated history for %s on %s with %s %s"
+        self.__logger.info("updated history for %s on %s with %s %s"
                        % (symbol, str(self.__log_date), price, p))
 
     def __get_splits(self):
@@ -609,7 +590,7 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("get splits %s" % p)
+        self.__logger.info("get splits %s" % p)
         data = type(self)._scraper.scrape(self.options["split_URL"])
         symbol = [d[0] for d in data[0]]
         # Convert split dates into float values for later comparisons
@@ -630,7 +611,7 @@ class HistoryUpdate(object):
         splits = splits[
             splits["date"] <= securitiesanalysis.utilities.get_yearfrac(
                 self.__log_date + datetime.timedelta(days=1))]
-        self.__log.log("got splits %s" % p)
+        self.__logger.info("got splits %s" % p)
         return splits
 
     def __split_update(self, symbol, before, after, split_date):
@@ -653,7 +634,7 @@ class HistoryUpdate(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log(
+        self.__logger.info(
             "split update %s %s %s %s %s" % (symbol, before, after, split_date,
                                              p))
         # Check to determine if closing price history has been collected for
@@ -663,7 +644,7 @@ class HistoryUpdate(object):
             if "%s %s %s %s" % (
                     symbol, before, after,
                     split_date) in self.__applied_split_set:
-                self.__log.log(
+                self.__logger.info(
                     "already applied split %s %s %s %s %s" % (
                         symbol, before, after, split_date, p))
             else:
@@ -686,7 +667,7 @@ class HistoryUpdate(object):
                 history.to_csv(os.path.join(
                     self.__history_path, "%s.txt" % symbol),
                     sep=" ", header=None, encoding="utf-8")
-                self.__log.log(
+                self.__logger.info(
                     "updating applied splits with %s %s %s %s %s" % (
                         symbol, before, after, split_date, p)
                 )
@@ -698,9 +679,9 @@ class HistoryUpdate(object):
                     "%s %s %s %s" % (symbol, before, after, split_date)
                 )
         else:
-            self.__log.log(
+            self.__logger.info(
                 "no history to update prices for splits with %s" % symbol)
-        self.__log.log("split updated %s %s %s %s %s" % (
+        self.__logger.info("split updated %s %s %s %s %s" % (
             symbol, before, after, split_date, p))
 
     def execute(self):
@@ -716,7 +697,7 @@ class HistoryUpdate(object):
         """
         self.__initialize_directories__()
         self.__configure_scraper__()
-        self.__log.log("starting update for %s" % str(self.__log_date))
+        self.__logger.info("starting update for %s" % str(self.__log_date))
         self.__data = self.get_security_data()
         [self.__update_history(index, row["price"]) for index,
                                                         row in
@@ -759,14 +740,9 @@ class HistoryUpdate(object):
         return self.__log_date
 
     @property
-    def log(self):
+    def logger(self):
         """obj: Logging utility for standard operating messages."""
-        return self.__log
-
-    @property
-    def err(self):
-        """obj: Logging utility for unexpected messages."""
-        return self.__err
+        return self.__logger
 
     @property
     def scraper(self):

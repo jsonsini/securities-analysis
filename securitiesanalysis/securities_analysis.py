@@ -37,6 +37,7 @@ import math
 import multiprocessing
 import pydoc
 import os
+import shutil
 import smtplib
 import socket
 import sys
@@ -63,8 +64,8 @@ class SecuritiesAnalysis(object):
 
     """
 
-    def __init__(self, root_path, options, data, message_list,
-                 log_date, log, err):
+    def __init__(self, root_path, options, data, message_list, log_date,
+                 logger):
         """
         Prepares all needed instance variables for execution.
 
@@ -93,8 +94,6 @@ class SecuritiesAnalysis(object):
         """str: Folder containing all relevant subdirectories."""
         self.__log_path = os.path.join(root_path, "logs")
         """str: Folder containing log message files."""
-        self.__error_path = os.path.join(root_path, "errors")
-        """str: Folder containing error message files."""
         self.__history_path = os.path.join(root_path, "history")
         """str: Folder containing security history files."""
         self.__report_path = os.path.join(root_path, "reports")
@@ -107,10 +106,8 @@ class SecuritiesAnalysis(object):
         """obj: List of messages to be included in body of summary email."""
         self.__log_date = log_date
         """date: Day of execution."""
-        self.__log = log
+        self.__logger = logger
         """obj: Logging utility for standard operating messages."""
-        self.__err = err
-        """obj: Logging utility for unexpected messages."""
         # Converts strings to corresponding classes for results dataframe
         self.__collect_types = {
             k: pydoc.locate(v) for k,
@@ -191,7 +188,7 @@ class SecuritiesAnalysis(object):
         """
         try:
             p = multiprocessing.current_process().name
-            self.__log.log("get fit for %s %s %s" % (symbol, duration, p))
+            self.__logger.info("get fit for %s %s %s" % (symbol, duration, p))
             # Provide default values in case fit is not able to be calculated
             fit = numpy.nan
             r2 = numpy.nan
@@ -209,10 +206,10 @@ class SecuritiesAnalysis(object):
             r2 = sklearn.metrics.r2_score(history["price"], predict)
             rmse = math.sqrt(
                 sklearn.metrics.mean_squared_error(history["price"], predict))
-            self.__log.log("found fit for %s %s %s %s %s %s"
-                           % (symbol, duration, fit, r2, rmse, p))
+            self.__logger.info("found fit for %s %s %s %s %s %s"
+                               % (symbol, duration, fit, r2, rmse, p))
         except:
-            self.__err.log(
+            self.__logger.error(
                 "get fit generic error for %s %s %s %s"
                 % (symbol, duration,
                    securitiesanalysis.utilities.format_error(sys.exc_info()),
@@ -245,7 +242,7 @@ class SecuritiesAnalysis(object):
         """
         try:
             p = multiprocessing.current_process().name
-            self.__log.log("process history for %s %s" % (symbol, p))
+            self.__logger.info("process history for %s %s" % (symbol, p))
             # Provide default values in case periods do not have complete data
             actual = [numpy.nan for i in range(5)]
             fit = [3 * [numpy.nan] for i in range(5)]
@@ -291,13 +288,13 @@ class SecuritiesAnalysis(object):
                         [i]:self.__ranges["end"][i]],
                 symbol, self.__ranges.index[i])] if fill_period[i]
                    else 3 * [numpy.nan] for i in range(len(fill_period))]
-            self.__log.log("processed history for %s %s %s %s"
-                           % (symbol, str(actual), str(fit), p))
+            self.__logger.info("processed history for %s %s %s %s"
+                               % (symbol, str(actual), str(fit), p))
         except:
-            self.__err.log("process history generic error for %s %s %s"
-                           % (symbol,
-                              securitiesanalysis.utilities.format_error(
-                                  sys.exc_info()), p))
+            self.__logger.error("process history generic error for %s %s %s"
+                                % (symbol,
+                                   securitiesanalysis.utilities.format_error(
+                                       sys.exc_info()), p))
         return actual, fit
 
     def get_regression_coefficients(self):
@@ -311,7 +308,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("get regression coefficients %s" % p)
+        self.__logger.info("get regression coefficients %s" % p)
         actual_fit = [self.process_history(i) for i in self.__data.index]
         # Extract the nested tuple elements into separate lists of lists
         # The elements of each are lists of values over the defined periods
@@ -332,7 +329,7 @@ class SecuritiesAnalysis(object):
         self.__data["3YRMSE"], self.__data["3YDRMSE"], self.__data["2YRMSE"], \
             self.__data["2YDRMSE"], self.__data["1YRMSE"] = \
             tuple([[r[i] for r in rmse] for i in range(5)])
-        self.__log.log("got regression coefficients %s" % p)
+        self.__logger.info("got regression coefficients %s" % p)
 
     def collect_reports(self):
         """
@@ -349,7 +346,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log(
+        self.__logger.info(
             "collecting reports for %s %s" % (str(self.__log_date), p))
         # Generate a list of previous report paths
         report_paths = [
@@ -366,7 +363,7 @@ class SecuritiesAnalysis(object):
                     ) for r in sorted(report_paths) if
                    securitiesanalysis.utilities.get_yearfrac(
                        self.__log_date - datetime.timedelta(days=375)) <= r[1]]
-        self.__log.log(
+        self.__logger.info(
             "collected reports for %s %s" % (str(self.__log_date), p))
         return reports
 
@@ -390,7 +387,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log(
+        self.__logger.info(
             "converting reports for %s %s" % (str(self.__log_date), p))
         coverted_reports = []
         # Adds a column with the collected date to each dataframe in the list
@@ -406,7 +403,7 @@ class SecuritiesAnalysis(object):
             columns = copy.deepcopy(self.__options["column_order"])
             columns.append("date")
             concatenated_reports = pandas.DataFrame(columns=columns)
-        self.__log.log(
+        self.__logger.info(
             "converted reports for %s %s" % (str(self.__log_date), p))
         return concatenated_reports
 
@@ -429,7 +426,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log(
+        self.__logger.info(
             "grouping reports for %s %s" % (str(self.__log_date), p))
         # Create list of dataframes based on ticker symbol
         grouped_reports = [group for _,
@@ -440,7 +437,7 @@ class SecuritiesAnalysis(object):
             temp = grouped_reports[i]
             temp.index = temp.pop("date")
             grouped_reports[i] = (symbol, temp)
-        self.__log.log(
+        self.__logger.info(
             "grouped reports for %s %s" % (str(self.__log_date), p))
         return grouped_reports
 
@@ -470,7 +467,7 @@ class SecuritiesAnalysis(object):
         """
         try:
             p = multiprocessing.current_process().name
-            self.__log.log(
+            self.__logger.info(
                 "get summary fit for %s %s %s" % (symbol, duration, p))
             # Provide a default value in case the slope cannot be calculated
             slope = numpy.nan
@@ -479,11 +476,10 @@ class SecuritiesAnalysis(object):
             # Generate the linear slope of the regression fit
             slope, _, _, _, _ = scipy.stats.mstats.linregress(summary.index,
                                                               summary.values)
-            self.__log.log("got summary fit for %s %s %s %s" % (symbol,
-                                                                duration,
-                                                                slope, p))
+            self.__logger.info("got summary fit for %s %s %s %s"
+                               % (symbol, duration, slope, p))
         except:
-            self.__err.log(
+            self.__logger.error(
                 "get summary fit generic error for %s %s %s %s" % (
                     symbol, duration,
                     securitiesanalysis.utilities.format_error(sys.exc_info()),
@@ -517,7 +513,7 @@ class SecuritiesAnalysis(object):
         p = multiprocessing.current_process().name
         try:
             symbol, frame = report
-            self.__log.log("process summary for %s %s" % (symbol, p))
+            self.__logger.info("process summary for %s %s" % (symbol, p))
             c = self.__options["process_summary_columns"]
             # Provide default values in case periods do not have complete data
             actual, fit = tuple(
@@ -556,12 +552,12 @@ class SecuritiesAnalysis(object):
                                             symbol, s))
                     if fill_period[i] else numpy.nan
                     for i in range(len(fill_period))] for s in c}
-            self.__log.log("processed summary for %s %s" % (symbol, p))
+            self.__logger.info("processed summary for %s %s" % (symbol, p))
         except:
-            self.__err.log("process summary generic error for %s %s %s" %
-                           (symbol,
-                            securitiesanalysis.utilities.format_error(
-                                sys.exc_info()), p))
+            self.__logger.error("process summary generic error for %s %s %s" %
+                                (symbol,
+                                 securitiesanalysis.utilities.format_error(
+                                     sys.exc_info()), p))
         return symbol, actual, fit
 
     def get_summary_regression_coefficients(self, reports):
@@ -586,7 +582,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("get summary regression coefficients %s" % p)
+        self.__logger.info("get summary regression coefficients %s" % p)
         # Extract the nested tuple elements into separate lists of dictionaries
         # The elements are dictionaries for each of the defined periods
         summary_results = [self.process_summary(r) for r in reports]
@@ -607,7 +603,7 @@ class SecuritiesAnalysis(object):
         # Move the symbol column to the index
         results.index = results.pop("symbol")
         results = results.astype(numpy.float16)
-        self.__log.log("got summary regression coefficients %s" % p)
+        self.__logger.info("got summary regression coefficients %s" % p)
         return results
 
     def aggregate(self):
@@ -631,7 +627,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("starting aggregation of results %s" % p)
+        self.__logger.info("starting aggregation of results %s" % p)
         # Find the top ten one year returns for each security type and cap
         top_sorted = self.__data.sort_values(
             ["type", "cap", "1YA"], ascending=[True, False, False]).groupby(
@@ -653,7 +649,7 @@ class SecuritiesAnalysis(object):
             group_dict[g] = group_dict[g][self.__options["aggregate_columns"]]
             group_dict[g].sort_values("1YA mean", ascending=False,
                                       inplace=True)
-        self.__log.log("finished aggregation of results %s" % p)
+        self.__logger.info("finished aggregation of results %s" % p)
         return top_sorted, market, group_dict
 
     def process_fits(self):
@@ -673,7 +669,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("processing fits %s" % p)
+        self.__logger.info("processing fits %s" % p)
         fit_dict = dict()
         a = self.__options["aggregate_dict"]
         for f in self.__options["fit_columns"]:
@@ -691,7 +687,7 @@ class SecuritiesAnalysis(object):
             fit_dict[fc] = fit_dict[fc][self.__options["aggregate_columns"]]
             fit_dict[fc].sort_values("%s mean" % f, ascending=False,
                                      inplace=True)
-        self.__log.log("processed fits %s" % p)
+        self.__logger.info("processed fits %s" % p)
         return fit_dict
 
     def generate_workbook(self, top_sorted, market, group_dict, fit_dict):
@@ -716,7 +712,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("generating workbook %s" % p)
+        self.__logger.info("generating workbook %s" % p)
         # Generate a list of dataframes to populate the workbook
         results = [
             top_sorted, market, group_dict["category"], group_dict["family"],
@@ -732,7 +728,7 @@ class SecuritiesAnalysis(object):
             workbook, h, r, self.__options["unquoted_comma_pattern"])
             for h, r in zip(self.__options["result_headers"], results)]
         workbook.close()
-        self.__log.log("generated workbook %s" % p)
+        self.__logger.info("generated workbook %s" % p)
 
     def get_email_message(self):
         """
@@ -749,8 +745,8 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("getting email message for %s %s"
-                       % (str(self.__log_date), p))
+        self.__logger.info("getting email message for %s %s"
+                           % (str(self.__log_date), p))
         email_address = self.__options["email_address"]
         summary_message = email.mime.multipart.MIMEMultipart()
         summary_message["Subject"] = "market summary for %s" \
@@ -768,8 +764,8 @@ class SecuritiesAnalysis(object):
         summary_message.attach(
             email.mime.text.MIMEText("\n".join(self.__message_list)))
         summary_message.attach(attachment)
-        self.__log.log("got email message for %s %s"
-                       % (str(self.__log_date), p))
+        self.__logger.info("got email message for %s %s"
+                           % (str(self.__log_date), p))
         return summary_message
 
     def email_results(self, summary_message):
@@ -788,7 +784,8 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("sending email for %s %s" % (str(self.__log_date), p))
+        self.__logger.info("sending email for %s %s" % (str(self.__log_date),
+                                                        p))
         email_address = self.__options["email_address"]
         sent = False
         retry_count = 0
@@ -805,18 +802,19 @@ class SecuritiesAnalysis(object):
                            summary_message.as_string())
                 s.quit()
                 sent = True
-                self.__log.log("sent email %s %s" % (str(self.__log_date), p))
+                self.__logger.info("sent email %s %s" % (str(self.__log_date),
+                                                         p))
             except socket.error:
-                self.__err.log(
+                self.__logger.error(
                     "socket error for sending email %s" % retry_count)
                 time.sleep(self.__options["delay_time"])
             except smtplib.SMTPServerDisconnected:
-                self.__err.log(
+                self.__logger.error(
                     "SMTP server disconnected error sending email %s"
                     % retry_count)
                 time.sleep(self.__options["delay_time"])
             except:
-                self.__err.log(
+                self.__logger.error(
                     "generic error sending email %s" % retry_count)
                 retry_count += 1
                 if retry_count < self.__options["max_retry_count"]:
@@ -833,7 +831,7 @@ class SecuritiesAnalysis(object):
 
         """
         p = multiprocessing.current_process().name
-        self.__log.log("removing logs %s" % p)
+        self.__logger.info("removing logs %s" % p)
         keep_date = self.__log_date \
                     - datetime.timedelta(days=self.__options["log_keep_days"])
         log_files = [os.path.join(self.__log_path, l)
@@ -848,19 +846,10 @@ class SecuritiesAnalysis(object):
         # Delete the log files outside of the retention period
         [os.remove(v) for k, v in log_dates.items() if k not in keep]
         removed_files = [v for k, v in log_dates.items() if k not in keep]
-        error_files = [os.path.join(self.__error_path, l)
-                       for l in os.listdir(self.__error_path)]
-        error_dates = {
-            datetime.datetime.strptime(
-                l.split("/")[-1][:-4],
-                "%Y-%m-%d").date(): l for l in error_files}
-        # Delete the error files outside of the retention period
-        [os.remove(v) for k, v in error_dates.items() if k not in keep]
-        removed_files.extend(
-            [v for k, v in error_dates.items() if k not in keep])
-        self.__log.log("deleted %s based on %s day threshold"
-                       % (str(removed_files), self.__options["log_keep_days"]))
-        self.__log.log("removed logs %s" % p)
+        self.__logger.info("deleted %s based on %s day threshold"
+                           % (str(removed_files),
+                              self.__options["log_keep_days"]))
+        self.__logger.info("removed logs %s" % p)
 
     def execute(self):
         """
@@ -895,7 +884,11 @@ class SecuritiesAnalysis(object):
         summary_message = self.get_email_message()
         self.email_results(summary_message)
         self.remove_logs()
-        self.__log.log("finished update for %s" % str(self.__log_date))
+        self.__logger.info("finished update for %s" % str(self.__log_date))
+        self.__logger.handlers[0].close()
+        # move the log file to the logs folder and rename to the current date
+        shutil.move(self.__logger.handlers[0].baseFilename,
+                    os.path.join(self.__log_path, "%s.log" % self.__log_date))
 
     @property
     def data(self):
@@ -923,14 +916,9 @@ class SecuritiesAnalysis(object):
         return self.__log_date
 
     @property
-    def log(self):
+    def logger(self):
         """obj: Logging utility for standard operating messages."""
-        return self.__log
-
-    @property
-    def err(self):
-        """obj: Logging utility for unexpected messages."""
-        return self.__err
+        return self.__logger
 
 
 if __name__ == '__main__':

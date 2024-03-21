@@ -31,6 +31,8 @@ import json
 import os
 import sys
 
+import pandas_market_calendars
+
 import securitiesanalysis.history_update
 import securitiesanalysis.securities_analysis
 import securitiesanalysis.utilities
@@ -62,37 +64,6 @@ def load_options():
     # return options, ""
 
 
-def is_trading_day(d, holidays):
-    """
-    Determine if passed in date is a trading day.
-
-    Compares the given date with the list of holidays and if not a weekend day
-    returns true.
-
-    Parameters
-    ----------
-    d : date
-        Date checked for trading day status.
-    holidays : list
-        List of known banking holidays from year 2000 to 2050.
-
-    Returns
-    -------
-    t : boolean
-        Determination of date being a trading day.
-
-    """
-    try:
-        t = d.weekday() < 5 and str(d) not in holidays
-    except:
-        print("is trading day error for date %s %s"
-              % (d,
-                 securitiesanalysis.utilities.format_error(sys.exc_info())))
-        return False
-    else:
-        return t
-
-
 def main():
     """
     Executes history update and analysis modules.
@@ -101,11 +72,14 @@ def main():
     perform the regression analysis, and save the results.
 
     """
-    options, root = load_options()
     # Check to determine if current date is a trading day
-    if not is_trading_day(datetime.date.today(), options["holidays"]):
-        print("%s is not a trading day, exiting" % str(datetime.date.today()))
+    calendar = pandas_market_calendars.get_calendar("NYSE")
+    is_trading_day = not calendar.valid_days(
+        start_date=datetime.date.today().strftime("%Y-%m-%d"),
+        end_date=datetime.date.today().strftime("%Y-%m-%d")).empty
+    if not is_trading_day:
         sys.exit(0)
+    options, root = load_options()
     h = securitiesanalysis.history_update.HistoryUpdate(options)
     # Update the security histories
     h.execute()
@@ -113,12 +87,8 @@ def main():
     with codecs.open(os.path.join(root, "data", "options.json"), "w",
                      "utf-8") as options_file:
         options_file.write(json.dumps(h.options, indent=4, sort_keys=True))
-    # with codecs.open("/home/john/data_backup/options.json", "w",
-    #                  "utf-8") as options_file:
-    #     options_file.write(json.dumps(h.options, indent=4, sort_keys=True))
     s = securitiesanalysis.securities_analysis.SecuritiesAnalysis(
-        h.root_path, h.options, h.data, h.message_list, h.log_date, h.log,
-        h.err)
+        h.root_path, h.options, h.data, h.message_list, h.log_date, h.logger)
     # Perform the regression analysis and save the results
     s.execute()
 
