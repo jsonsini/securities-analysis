@@ -31,7 +31,6 @@ import datetime
 import logging.config
 import multiprocessing
 import os
-import re
 import string
 import sys
 
