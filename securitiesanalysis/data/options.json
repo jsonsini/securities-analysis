@@ -3523,6 +3523,7 @@
         "One Year Category"
     ],
     "root_path": "/home/john/data",
+    "send_email": false,
     "smtp_host": "smtp-mail.outlook.com",
     "smtp_port": 587,
     "split_URL": "http://eoddata.com/splits.aspx",

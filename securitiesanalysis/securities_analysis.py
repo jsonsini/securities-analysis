@@ -881,8 +881,9 @@ class SecuritiesAnalysis(object):
         top_sorted, market, group_dict = self.aggregate()
         fit_dict = self.process_fits()
         self.generate_workbook(top_sorted, market, group_dict, fit_dict)
-        summary_message = self.get_email_message()
-        self.email_results(summary_message)
+        if self.__options["send_email"]:
+            summary_message = self.get_email_message()
+            self.email_results(summary_message)
         self.remove_logs()
         self.__logger.info("finished update for %s" % str(self.__log_date))
         self.__logger.handlers[0].close()
