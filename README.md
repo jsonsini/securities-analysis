@@ -4,7 +4,7 @@ Securities Analysis is a Python package designed to provide customizable least s
 ### Installation
 To install Securities Analysis, simply execute the following command from the download directory:
 ```bash
-sudo python setup.py install
+sudo python -m pip install .
 ```
 
 To execute Securities Analysis from the command line run the following:
