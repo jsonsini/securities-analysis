@@ -78,11 +78,12 @@ result = setuptools.setup(
         "Topic :: Scientific/Engineering :: Mathematics"
     ]
 )
-
 # Determining the path of the installation directory for the options file.
-optionsPath = os.path.join(site.getsitepackages()[0],
-                           result.dist_files[0][2][5:], "securitiesanalysis",
-                           "data", "options.json")
+optionsPath = os.path.join(
+    site.getsitepackages()[0],
+    [f for f in os.listdir(site.getsitepackages()[0])
+     if f.startswith(result.get_fullname())][0],
+    "securitiesanalysis", "data", "options.json")
 # Allow all users write access to options file so that package can be executed
 # by any user.
 os.chmod(optionsPath, os.stat(optionsPath)[stat.ST_MODE] | stat.S_IWOTH)
