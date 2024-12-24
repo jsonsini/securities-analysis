@@ -82,7 +82,8 @@ result = setuptools.setup(
 optionsPath = os.path.join(
     site.getsitepackages()[0],
     [f for f in os.listdir(site.getsitepackages()[0])
-     if f.startswith(result.get_fullname()[:-14])][0], "data", "options.json")
+     if f.startswith(result.get_fullname()[:-14])][0], "securitiesanalysis",
+    "data", "options.json")
 # Allow all users write access to options file so that package can be executed
 # by any user.
 os.chmod(optionsPath, os.stat(optionsPath)[stat.ST_MODE] | stat.S_IWOTH)

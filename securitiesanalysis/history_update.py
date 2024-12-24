@@ -595,7 +595,7 @@ class HistoryUpdate(object):
         # Convert split dates into float values for later comparisons
         split_date = [round(
             securitiesanalysis.utilities.get_yearfrac(
-                datetime.datetime.strptime(d[1], "%m/%d/%Y").date()),
+                datetime.datetime.strptime(d[1], "%Y-%m-%d").date()),
             6) for d in data[0]]
         # Number of shares before the split occurred
         before = [float(d[2]) for d in data[0]]
