@@ -3771,7 +3771,7 @@
     "split_URL": "http://eoddata.com/splits.aspx",
     "split_date_format": "%m/%d/%Y",
     "split_pattern": "(?<=stockquote\\/)[^>]*>([^<]*).*\n<td>([^<]*).*\n<td>([^-]*)-([^<]*)",
-    "stock_assets_pattern": "content=.* of \\$(\\S+) and",
+    "stock_assets_pattern": "Market Cap is[^<]+.*?\"value\">\\$([^<]+)",
     "stock_category_pattern": "Sector</div>\\s*<span[^<]+<span[^<]+</span>\\s*<span[^<]+</span></span>\\s*<div[^>]+>([^<]+)",
     "stock_prefix_URL": "https://marketcapof.com/stocks/%s.us",
     "timeout_period": 30,
