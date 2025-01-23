@@ -21,7 +21,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU Affero General Public License v3
 (https://www.gnu.org/licenses/agpl.html) for more details.
 
-Copyright (C) 2024 John Sonsini.  All rights reserved.  Source code available
+Copyright (C) 2025 John Sonsini.  All rights reserved.  Source code available
 under the AGPLv3.
 
 """

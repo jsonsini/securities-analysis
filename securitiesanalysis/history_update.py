@@ -22,7 +22,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU Affero General Public License v3
 (https://www.gnu.org/licenses/agpl.html) for more details.
 
-Copyright (C) 2024 John Sonsini.  All rights reserved.  Source code available
+Copyright (C) 2025 John Sonsini.  All rights reserved.  Source code available
 under the AGPLv3.
 
 """
@@ -595,7 +595,8 @@ class HistoryUpdate(object):
         # Convert split dates into float values for later comparisons
         split_date = [round(
             securitiesanalysis.utilities.get_yearfrac(
-                datetime.datetime.strptime(d[1], "%Y-%m-%d").date()),
+                datetime.datetime.strptime(
+                    d[1], self.options["split_date_format"]).date()),
             6) for d in data[0]]
         # Number of shares before the split occurred
         before = [float(d[2]) for d in data[0]]
