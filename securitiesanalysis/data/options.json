@@ -1921,6 +1921,7 @@
         "IPDN 1.0 2.0 2023.013699",
         "IPE 2.0 1.0 2019.728767",
         "IPI 1.0 10.0 2020.620219",
+        "IQST 1.0 80.0 2025.334247",
         "IRCP 13.0 3.0 2021.569863",
         "IRCP 4.0 1.0 2021.539726",
         "IRON 1.0 10.0 2022.99726",
@@ -2689,6 +2690,7 @@
         "RMTI 1.0 11.0 2022.364384",
         "RNAC 1.0 30.0 2024.262295",
         "RNAZ 1.0 20.0 2023.391781",
+        "RNAZ 1.0 28.0 2025.369863",
         "RNAZ 1.0 33.0 2024.92623",
         "RNAZ 1.0 40.0 2024.043716",
         "RNVA 1.0 1000.0 2021.547945",
@@ -3930,7 +3932,7 @@
         "http://eoddata.com/stocklist/NYSE/%s.htm": "stock",
         "http://eoddata.com/stocklist/USMF/%s.htm": "fund"
     },
-    "eod_pool_size": 4,
+    "eod_pool_size": 2,
     "etf_assets_pattern": "Total Assets</th><td>\\$([^<]+)",
     "etf_category_pattern": "Morningstar Category DB: </label><strong>([^<]+)",
     "etf_family_pattern": "Fund Company</th><td class=\\\"normalWrap\\\"><span>([^<]+)",
@@ -3973,7 +3975,7 @@
         "version": 1
     },
     "max_retry_count": 15,
-    "metadata_pool_size": 4,
+    "metadata_pool_size": 2,
     "metadata_timeout": 300,
     "process_summary_columns": [
         "1YA",
