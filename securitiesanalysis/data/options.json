@@ -3932,7 +3932,7 @@
         "http://eoddata.com/stocklist/NYSE/%s.htm": "stock",
         "http://eoddata.com/stocklist/USMF/%s.htm": "fund"
     },
-    "eod_pool_size": 2,
+    "eod_pool_size": 4,
     "etf_assets_pattern": "Total Assets</th><td>\\$([^<]+)",
     "etf_category_pattern": "Morningstar Category DB: </label><strong>([^<]+)",
     "etf_family_pattern": "Fund Company</th><td class=\\\"normalWrap\\\"><span>([^<]+)",
@@ -3975,7 +3975,7 @@
         "version": 1
     },
     "max_retry_count": 15,
-    "metadata_pool_size": 2,
+    "metadata_pool_size": 4,
     "metadata_timeout": 300,
     "process_summary_columns": [
         "1YA",
