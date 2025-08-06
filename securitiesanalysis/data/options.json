@@ -4048,7 +4048,7 @@
     "fund_family_pattern": "<a href=\"/fund-company[^>]+>([^<]+)",
     "fund_family_prefix_URL": "https://www.mutualfunds.com/funds/%s",
     "fund_total_assets_category_prefix_URL": "https://www.google.com/finance/quote/%s:MUTF",
-    "history_pattern": "(?<=Chart for ).*,([^\"]+)\">.*<\\/A><\\/td><td>(.*)<\\/td>.*<\\/td><td align=right>.*<\\/td><td align=right>(.*)<\\/td><td align=right>",
+    "history_pattern": "Chart for [^>]+>([^<]+)</a></td>(?:[^>]+)>([^<]*)</td><td align=right>(?:[^<]+)</td><td align=right>(?:[^<]+)</td><td align=right>([^<]+)",
     "log_keep_days": 10,
     "logging_config": {
         "formatters": {
