@@ -4027,10 +4027,7 @@
     "email_address": "thisisnot@myemail.com",
     "email_password": "this is not my password",
     "eod_URL_dict": {
-        "http://eoddata.com/stocklist/AMEX/%s.htm": "etf",
-        "http://eoddata.com/stocklist/NASDAQ/%s.htm": "stock",
-        "http://eoddata.com/stocklist/NYSE/%s.htm": "stock",
-        "http://eoddata.com/stocklist/USMF/%s.htm": "fund"
+        "https://stock-screener.org/stock-list.aspx?alpha=%s": "etf"
     },
     "eod_pool_size": 4,
     "etf_assets_pattern": "Total Assets</th><td>\\$([^<]+)",
@@ -4048,7 +4045,7 @@
     "fund_family_pattern": "<a href=\"/fund-company[^>]+>([^<]+)",
     "fund_family_prefix_URL": "https://www.mutualfunds.com/funds/%s",
     "fund_total_assets_category_prefix_URL": "https://www.google.com/finance/quote/%s:MUTF",
-    "history_pattern": "Chart for [^>]+>([^<]+)</a></td>(?:[^>]+)>([^<]*)</td><td align=right>(?:[^<]+)</td><td align=right>(?:[^<]+)</td><td align=right>([^<]+)",
+    "history_pattern": "padding:5px;\"> ([^ ]+) </td>[^<]+<td width=\"40.*\n.*\n.*5px;\"> (.*) <.*\n.*\n.*\n.*\n.*5px;\"> ([^ ]+)",
     "log_keep_days": 10,
     "logging_config": {
         "formatters": {
