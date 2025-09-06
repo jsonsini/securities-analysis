@@ -8,7 +8,8 @@ stocks. The analysis is based on daily closing prices and is designed to be
 executed after market close via a cron job or equivalent scheduler.  All
 configuration parameters are specified in the options.json file located in the
 installation folder under the data subdirectory.  The package utilizes NumPy,
-Pandas, Requests, Scikit-learn, SciPy, and XlsxWriter.
+Pandas, Pandas_Market_Calendars, Requests, Selenium, Scikit-learn, SciPy, and
+XlsxWriter.
 
 Notes
 -----
@@ -27,8 +28,10 @@ under the AGPLv3.
 """
 import codecs
 import datetime
+import importlib.resources
 import json
 import os
+import stat
 import sys
 
 import pandas_market_calendars
@@ -38,30 +41,24 @@ import securitiesanalysis.securities_analysis
 import securitiesanalysis.utilities
 
 
-def load_options():
+def modify_options_permissions():
     """
-    Load options.json file from installation directory.
+    Modifies permissions of options.json
 
-    Ingests the options file and returns it as a dictionary along with the root
-    of the installation directory.
-
-    Returns
-    -------
-    options : dictionary
-        Dictionary of configured options.
-    root : str
-        Folder containing all relevant subdirectories.
+    Ensure the options file is world writable if it has not been had the
+    permissions modified before.
 
     """
-    root = os.path.abspath(os.path.dirname(__file__))
-    with codecs.open(os.path.join(root, "data", "options.json"), "r",
-                     "utf-8") as options_file:
-        options = json.loads(options_file.read())
-    return options, root
-    # with codecs.open("/home/john/data_backup/options.json", "r",
-    #                  "utf-8") as options_file:
-    #     options = json.loads(options_file.read())
-    # return options, ""
+    try:
+        with importlib.resources.path(
+                "securitiesanalysis.data", "options.json") as options_context:
+            permissions = os.stat(options_context)
+            # check if S_IWOTH is already set
+            if not (permissions.st_mode & stat.S_IWOTH):
+                os.chmod(options_context, permissions.st_mode | stat.S_IWOTH)
+    except FileNotFoundError:
+        print("modify options permissions error %s"
+              % securitiesanalysis.utilities.format_error(sys.exc_info()))
 
 
 def main():
@@ -79,7 +76,13 @@ def main():
         end_date=datetime.date.today().strftime("%Y-%m-%d")).empty
     if not is_trading_day:
         sys.exit(0)
-    options, root = load_options()
+    # ensure the options file is universally writable
+    modify_options_permissions()
+    root = os.path.abspath(os.path.dirname(__file__))
+    # load configuration parameters from the options file
+    with codecs.open(os.path.join(root, "data", "options.json"), "r",
+                     "utf-8") as options_file:
+        options = json.loads(options_file.read())
     h = securitiesanalysis.history_update.HistoryUpdate(options)
     # Update the security histories
     h.execute()

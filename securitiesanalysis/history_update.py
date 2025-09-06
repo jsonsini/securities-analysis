@@ -31,11 +31,14 @@ import datetime
 import logging.config
 import multiprocessing
 import os
+import re
 import string
 import sys
+import time
 
 import pandas
 import requests.packages
+import selenium.webdriver
 
 import securitiesanalysis.regex_webscraper
 import securitiesanalysis.utilities
@@ -468,12 +471,34 @@ class HistoryUpdate(object):
             self.__logger.info("scrape eod %s %s" % (eod_url, p))
             # Collect data matching the configured regular expressions from the
             # passed in web page
-            data = self._scraper.scrape(eod_url)
-            symbols = [d[0] for d in data[0]]
-            titles = [d[1] for d in data[0]]
+            options = selenium.webdriver.ChromeOptions()
+            options.add_argument("--headless=new")
+            data = list()
+            success = False
+            retry_count = 0
+            while not success \
+                    and retry_count < self.__options["max_retry_count"]:
+                driver = selenium.webdriver.Chrome(options=options)
+                driver.get(eod_url)
+                time.sleep(self.__options["page_load_delay"])
+                data = re.findall(self.__options["history_pattern"],
+                                  driver.page_source)
+                driver.quit()
+                success = 0 < len(data)
+                if not success:
+                    self.__logger.warning(
+                        "%s did not return any results, loading page again"
+                        % eod_url)
+                    retry_count += 1
+            if retry_count == self.__options["max_retry_count"]:
+                self.__logger.warning(
+                    "%s exhausted maximum retry count of %s"
+                    % (eod_url, self.__options["max_retry_count"]))
+            symbols = [d[0] for d in data]
+            titles = [d[1] if d[1] else "" for d in data]
             # Remove commas from prices so data can be treated as numeric
-            prices = [d[2].replace(",", "") for d in data[0]]
-            security_types = [initial_type for d in data[0]]
+            prices = [d[2].replace(",", "") for d in data]
+            security_types = [initial_type for d in data]
             # Create a concurrent process pool to execute the scraping in
             # parallel
             with securitiesanalysis.utilities.NonDaemonicPool(
@@ -527,9 +552,6 @@ class HistoryUpdate(object):
         results_list = list()
         # Loop over the configured dictionary of security lists
         for k in sorted(self.__options["eod_URL_dict"].keys()):
-            type(self)._scraper.pattern_list = [
-                self.__options["history_pattern"]]
-            type(self)._scraper.findall = True
             # Create a concurrent process pool to execute the scraping of
             # symbol lists starting with each letter of the alphabet in
             # parallel
@@ -590,18 +612,43 @@ class HistoryUpdate(object):
         """
         p = multiprocessing.current_process().name
         self.__logger.info("get splits %s" % p)
-        data = type(self)._scraper.scrape(self.options["split_URL"])
-        symbol = [d[0] for d in data[0]]
+        options = selenium.webdriver.ChromeOptions()
+        options.add_argument("--headless=new")
+        data = list()
+        success = False
+        retry_count = 0
+        while not success \
+                and retry_count < self.__options["max_retry_count"]:
+            driver = selenium.webdriver.Chrome(options=options)
+            driver.get(self.__options["split_URL"])
+            time.sleep(self.__options["page_load_delay"])
+            data = re.findall(self.__options["split_pattern"],
+                              driver.page_source)
+            driver.quit()
+            success = 0 < len(data)
+            if not success:
+                self.__logger.warning(
+                    "%s did not return any results, loading page again"
+                    % self.__options["split_URL"])
+                retry_count += 1
+        if retry_count == self.__options["max_retry_count"]:
+            self.__logger.warning(
+                "%s exhausted maximum retry count of %s"
+                % (self.__options["split_URL"],
+                   self.__options["max_retry_count"]))
         # Convert split dates into float values for later comparisons
         split_date = [round(
             securitiesanalysis.utilities.get_yearfrac(
                 datetime.datetime.strptime(
-                    d[1], self.options["split_date_format"]).date()),
-            6) for d in data[0]]
+                    d[0], self.__options["split_date_format"]).date()),
+            6) for d in data]
+        symbol = [d[1] for d in data]
+        ratios = [[float(i.replace(",", "")) for i in d[3].split()[0:3:2]] for
+                  d in data]
         # Number of shares before the split occurred
-        before = [float(d[2]) for d in data[0]]
+        before = [r[0] for r in ratios]
         # Number of resulting shares after the split occurred
-        after = [float(d[3]) for d in data[0]]
+        after = [r[1] for r in ratios]
         splits = pandas.DataFrame(index=symbol,
                                   data={"date": split_date,
                                         "before": before,
@@ -702,10 +749,6 @@ class HistoryUpdate(object):
         [self.__update_history(index, row["price"]) for index,
                                                         row in
          self.__data.iterrows()]
-        # Update the regular expression patterns and attributes to collect
-        type(self)._scraper.pattern_list = [self.options["split_pattern"]]
-        type(self)._scraper.findall = True
-        type(self)._scraper.groups = None
         [self.__split_update(
             index, row["before"], row["after"], row["date"]) for index,
                                                                  row in

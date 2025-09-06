@@ -1,0 +1,89 @@
+# Securities Analysis: Configurable Regression Analysis of Securities
+#
+# Securities Analysis is an open source package for performing non linear
+# regression analysis on lists of mutual funds, exchange traded funds, and
+# stocks. The analysis is based on daily closing prices and is designed to be
+# executed after market close via a cron job or equivalent scheduler.  All
+# configuration parameters are specified in the options.json file located in
+# the installation folder under the data subdirectory.  The package utilizes
+# NumPy, Pandas, Pandas_Market_Calendars, Requests, Selenium, Scikit-learn,
+# SciPy, and XlsxWriter.
+#
+# Example
+# -------
+# To install Securities Analysis, simply execute the following command from
+# the download directory:
+#
+# sudo pip install .
+#
+# To execute Securities Analysis from the command line run the following:
+#
+# securities-analysis
+#
+# Notes
+# -----
+# Securities Analysis is distributed under the GNU Affero General Public
+# License v3 (https://www.gnu.org/licenses/agpl.html) as open source software
+# with attribution required.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public
+# License v3 (https://www.gnu.org/licenses/agpl.html) for more details.
+#
+# Copyright (C) 2025 John Sonsini.  All rights reserved.  Source code
+# available under the AGPLv3.
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "securities-analysis"
+version = "1.0"
+description = "Performs configurable regression analysis on securities"
+readme = "README.md"
+requires-python = ">=3.6"
+license = { text = "GNU AGPLv3" }
+authors = [
+  { name="John Sonsini", email="john.a.sonsini@gmail.com" }
+]
+keywords = [
+  "securities",
+  "investments",
+  "mutual fund",
+  "stock",
+  "etf",
+  "analysis"
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Financial and Insurance Industry",
+  "License :: OSI Approved :: GNU Affero General Public License v3",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.6",
+  "Topic :: Office/Business :: Financial :: Investment",
+  "Topic :: Scientific/Engineering :: Mathematics"
+]
+dependencies = [
+  "numpy>=1.19.2",
+  "pandas>=1.1.5",
+  "pandas_market_calendars>=4.0.1",
+  "requests>=2.25.1",
+  "selenium>=4.24.0",
+  "scipy>=1.5.2",
+  "xlsxwriter>=1.3.7"
+]
+
+[project.urls]
+Homepage = "https://github.com/jsonsini/securities-analysis"
+
+[project.scripts]
+securities-analysis = "securitiesanalysis.__main__:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]

@@ -8,7 +8,8 @@ stocks. The analysis is based on daily closing prices and is designed to be
 executed after market close via a cron job or equivalent scheduler.  All
 configuration parameters are specified in the options.json file located in the
 installation folder under the data subdirectory.  The package utilizes NumPy,
-Pandas, Requests, Scikit-learn, SciPy, and XlsxWriter.
+Pandas, Pandas_Market_Calendars, Requests, Selenium, Scikit-learn, SciPy, and
+XlsxWriter.
 
 Routine Listings
 ----------------
