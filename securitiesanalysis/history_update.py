@@ -341,7 +341,16 @@ class HistoryUpdate(object):
             matches = type(self)._scraper.scrape(
                 self.__options["stock_prefix_URL"] % symbol)
             a, c = matches[0], matches[1]
-            a = int(a.replace(",", ""))
+            if a[-1] == "K":
+                a = int(1000 * float(a[:-1]))
+            elif a[-1] == "M":
+                a = int(1000000 * float(a[:-1]))
+            elif a[-1] == "B":
+                a = int(1000000000 * float(a[:-1]))
+            elif a[-1] == "T":
+                a = int(1000000000000 * float(a[:-1]))
+            else:
+                a = -1
         except:
             a = -1
         try:

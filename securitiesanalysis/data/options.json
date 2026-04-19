@@ -4680,9 +4680,9 @@
     "split_URL": "https://stockanalysis.com/actions/splits/",
     "split_date_format": "%b %d, %Y",
     "split_pattern": "<td class=\"svelte-1swpzu1\">([^<]+)</td>[^/]+[^\"]+\" ?>(?:<!---->)?([^<]+)(?:<!---->)?[^\"]+\"[^>]+>([^<]+)[^\"]+[^<]+[^\"]+[^>]+>([^<]+)",
-    "stock_assets_pattern": "Market Cap is[^<]+</span></span>\\s+[^>]+>\\$([^<]+)",
-    "stock_category_pattern": "Sector</div>\\s*<span[^<]+<span[^<]+</span>\\s*<span[^<]+</span></span>\\s*<div[^>]+>([^<]+)",
-    "stock_prefix_URL": "https://marketcapof.com/stocks/%s.us",
+    "stock_assets_pattern": "Market Cap:\\s*<!-- -->\\$(\\d+(?:\\.\\d+)?[A-Z])",
+    "stock_category_pattern": "\"sector\":\"([^\"]+)\"",
+    "stock_prefix_URL": "https://public.com/stocks/%s/market-cap",
     "timeout_period": 30,
     "unquoted_comma_pattern": ",(?=(?:[^\"']*[\"'][^\"']*[\"'])*[^\"']*$)"
 }
