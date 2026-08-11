@@ -623,13 +623,18 @@ class HistoryUpdate(object):
         self.__logger.info("get splits %s" % p)
         options = selenium.webdriver.ChromeOptions()
         options.add_argument("--headless=new")
+        options.page_load_strategy = "eager"
         data = list()
         success = False
         retry_count = 0
         while not success \
                 and retry_count < self.__options["max_retry_count"]:
             driver = selenium.webdriver.Chrome(options=options)
-            driver.get(self.__options["split_URL"])
+            # Timing out with the eager load option is not an issue
+            try:
+                driver.get(self.__options["split_URL"])
+            except Exception:
+                pass
             time.sleep(self.__options["page_load_delay"])
             data = re.findall(self.__options["split_pattern"],
                               driver.page_source)
@@ -645,19 +650,17 @@ class HistoryUpdate(object):
                 "%s exhausted maximum retry count of %s"
                 % (self.__options["split_URL"],
                    self.__options["max_retry_count"]))
+        symbol = [d[0] for d in data]
+        # Number of shares before the split occurred
+        before = [float(r[1]) for r in data]
+        # Number of resulting shares after the split occurred
+        after = [float(r[2]) for r in data]
         # Convert split dates into float values for later comparisons
         split_date = [round(
             securitiesanalysis.utilities.get_yearfrac(
                 datetime.datetime.strptime(
-                    d[0], self.__options["split_date_format"]).date()),
+                    d[3], self.__options["split_date_format"]).date()),
             6) for d in data]
-        symbol = [d[1] for d in data]
-        ratios = [[float(i.replace(",", "")) for i in d[3].split()[0:3:2]] for
-                  d in data]
-        # Number of shares before the split occurred
-        before = [r[0] for r in ratios]
-        # Number of resulting shares after the split occurred
-        after = [r[1] for r in ratios]
         splits = pandas.DataFrame(index=symbol,
                                   data={"date": split_date,
                                         "before": before,
@@ -681,11 +684,11 @@ class HistoryUpdate(object):
         ----------
         symbol : str
             Ticker symbol representing security.
-        before : str
+        before : float
             Number of shares involved before date of split.
-        after : str
+        after : float
             Number of shares involved after date of split.
-        split_date : str
+        split_date : float
             Date split occurs.
 
         """
@@ -713,27 +716,31 @@ class HistoryUpdate(object):
                 history.index = [securitiesanalysis.utilities.get_yearfrac(
                     datetime.datetime.strptime(h, "%Y-%m-%d").date()
                 ) for h in history.index]
-                # Multiply the closing prices occurring before the split date
-                # by the ratio of the before and after number of shares
-                history["price"] = [round(
-                    row["price"] * after / before, 2
-                ) if index < split_date else row["price"]
-                                    for index, row in history.iterrows()]
-                history.index = old_index
-                history.to_csv(os.path.join(
-                    self.__history_path, "%s.txt" % symbol),
-                    sep=" ", header=None, encoding="utf-8")
-                self.__logger.info(
-                    "updating applied splits with %s %s %s %s %s" % (
-                        symbol, before, after, split_date, p)
-                )
-                self.message_list.append(
-                    "updating applied splits with %s %s %s %s" % (
-                        symbol, before, after, split_date)
-                )
-                self.__applied_split_set.add(
-                    "%s %s %s %s" % (symbol, before, after, split_date)
-                )
+                try:
+                    ratio = after / before
+                    mask = history.index < split_date
+                    history.loc[mask, "price"] = (
+                            history.loc[mask, "price"] * ratio).round(2)
+                    history.index = old_index
+                    history.to_csv(os.path.join(
+                        self.__history_path, "%s.txt" % symbol),
+                        sep=" ", header=None, encoding="utf-8")
+                    self.__logger.info(
+                        "updating applied splits with %s %s %s %s %s" % (
+                            symbol, before, after, split_date, p)
+                    )
+                    self.message_list.append(
+                        "updating applied splits with %s %s %s %s" % (
+                            symbol, before, after, split_date)
+                    )
+                    self.__applied_split_set.add(
+                        "%s %s %s %s" % (symbol, before, after, split_date)
+                    )
+                except:
+                    self.__logger.error(
+                        "split update generic error for %s %s %s"
+                        % (symbol, securitiesanalysis.utilities.format_error(
+                               sys.exc_info()), p))
         else:
             self.__logger.info(
                 "no history to update prices for splits with %s" % symbol)

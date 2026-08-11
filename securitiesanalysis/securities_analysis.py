@@ -256,19 +256,11 @@ class SecuritiesAnalysis(object):
             fill_period = [
                 history.index[0] <= self.__ranges["start"][i] for i in
                 self.__ranges.index]
-            # Find the dataframe indices closest to the range boundaries
-            # closest_indices = [(history.index.get_loc(
-            #     self.__ranges["start"][i], method="nearest"),
-            #                     history.index.get_loc(self.__ranges["end"][i],
-            #                                           method="nearest"))
-            #                    if fill_period[i] else numpy.nan for i in
-            #                    range(len(fill_period))]
-
             closest_indices = [
                 (history.index.get_indexer(
-                    [self.__ranges["start"][i]], method="nearest"),
+                    [self.__ranges["start"].iloc[i]], method="nearest"),
                  history.index.get_indexer(
-                     [self.__ranges["end"][i]], method="nearest"))
+                     [self.__ranges["end"].iloc[i]], method="nearest"))
                 if fill_period[i] else numpy.nan for i in
                 range(len(fill_period))]
             closest_dates = [(history.index[c[0]],
@@ -284,8 +276,8 @@ class SecuritiesAnalysis(object):
             # Generate the fits of the same periods and collect the growth rate
             fit = [["%.6f"
                     % v for v in self.get_fit(
-                history[self.__ranges["start"]
-                        [i]:self.__ranges["end"][i]],
+                history[self.__ranges["start"].iloc[
+                            i]:self.__ranges["end"].iloc[i]],
                 symbol, self.__ranges.index[i])] if fill_period[i]
                    else 3 * [numpy.nan] for i in range(len(fill_period))]
             self.__logger.info("processed history for %s %s %s %s"
@@ -472,10 +464,11 @@ class SecuritiesAnalysis(object):
             # Provide a default value in case the slope cannot be calculated
             slope = numpy.nan
             # Normalize the index so the independent variable starts at zero
-            summary.index = [i - summary.index[0] for i in summary.index]
+            summary.index = summary.index - summary.index[0]
             # Generate the linear slope of the regression fit
-            slope, _, _, _, _ = scipy.stats.mstats.linregress(summary.index,
-                                                              summary.values)
+            slope, _, _, _, _ = scipy.stats.mstats.linregress(
+                numpy.asarray(summary.index, dtype=float),
+                numpy.asarray(summary, dtype=float))
             self.__logger.info("got summary fit for %s %s %s %s"
                                % (symbol, duration, slope, p))
         except:
@@ -522,14 +515,16 @@ class SecuritiesAnalysis(object):
             )
             # Determine if data exists to fill each date range completely
             fill_period = [
-                frame.index[0] <= self.__summary_ranges["start"][i] for i in
-                self.__summary_ranges.index]
+                frame.index[0] <= self.__summary_ranges["start"][i]
+                for i in self.__summary_ranges.index]
             # Find the dataframe indices closest to the range boundaries
             closest_indices = [
                 (frame.index.get_indexer(
-                    [self.__summary_ranges["start"][i]], method="nearest"),
+                    [self.__summary_ranges["start"].iloc[i]],
+                    method="nearest"),
                  frame.index.get_indexer(
-                     [self.__summary_ranges["end"][i]], method="nearest"))
+                     [self.__summary_ranges["end"].iloc[i]],
+                     method="nearest"))
                 if fill_period[i] else numpy.nan for i in
                 range(len(fill_period))]
             closest_dates = [
