@@ -561,6 +561,7 @@ class HistoryUpdate(object):
         results_list = list()
         # Loop over the configured dictionary of security lists
         for k in sorted(self.__options["eod_URL_dict"].keys()):
+            self.__logger.info("processing %s" % k)
             # Create a concurrent process pool to execute the scraping of
             # symbol lists starting with each letter of the alphabet in
             # parallel
