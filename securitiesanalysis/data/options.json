@@ -4959,9 +4959,9 @@
     "split_URL": "https://www.marketbeat.com/stock-splits/",
     "split_date_format": "%Y%m%d",
     "split_pattern": "class=\"ticker-area\">([^<]+)</div><div class=\"title-area\">[^<]+</div></a></td><td data-clean=\"([^:]+):([^\"]+)\">[^<]+</td><td data-sort-value=\"(\\d{8})",
-    "stock_assets_pattern": "Market Cap:\\s*<!-- -->\\$(\\d+(?:\\.\\d+)?[A-Z])",
-    "stock_category_pattern": "\"sector\":\"([^\"]+)\"",
-    "stock_prefix_URL": "https://public.com/stocks/%s/market-cap",
+    "stock_assets_pattern": "Market Capitalization</dt><dd><strong>\\$([0-9]+(?:\\.[0-9]+)?\\s+[a-zA-Z]+)</strong>",
+    "stock_category_pattern": "Sub-Industry</dt><dd class=\\\"m-0\\\"><strong>([^<]+)",
+    "stock_prefix_URL": "https://www.marketbeat.com/stocks/NASDAQ/%s",
     "timeout_period": 30,
     "unquoted_comma_pattern": ",(?=(?:[^\"']*[\"'][^\"']*[\"'])*[^\"']*$)"
 }
